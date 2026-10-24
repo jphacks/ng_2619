@@ -1,0 +1,317 @@
+// 基本設計書 4.3 テーブル定義
+// CHECK制約・部分一意インデックスは Prisma のスキーマで書けないため、
+// prisma/migrations/*/migration.sql に直接書いている。スキーマを変えるときは
+// `npx prisma migrate dev --create-only` でSQLを作り、制約を手で追記すること。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Family {
+  id        String    @id @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  users      User[]
+  missions   Mission[]
+  challenges Challenge[]
+  videos     Video[]
+
+  @@map("families")
+}
+
+model User {
+  id                String    @id @db.Uuid
+  familyId          String    @map("family_id") @db.Uuid
+  role              String
+  loginId           String    @unique @map("login_id")
+  passwordHash      String    @map("password_hash")
+  displayName       String    @map("display_name") @db.VarChar(10)
+  email             String?
+  failedLoginCount  Int       @default(0) @map("failed_login_count") @db.SmallInt
+  lockedUntil       DateTime? @map("locked_until") @db.Timestamptz(6)
+  passwordChangedAt DateTime  @default(now()) @map("password_changed_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz(6)
+
+  family              Family               @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  parentSettings      ParentSettings?
+  childProfile        ChildProfile?
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  loginEvents         LoginEvent[]
+  activityDays        ActivityDay[]
+  createdMissions     Mission[]            @relation("MissionCreatedBy")
+  challenges          Challenge[]          @relation("ChallengeChild")
+  reviewedSubmissions Submission[]         @relation("SubmissionReviewer")
+  avatarEquips        AvatarEquip[]
+  inquiries           Inquiry[]
+
+  @@index([familyId])
+  @@map("users")
+}
+
+model ParentSettings {
+  userId         String   @id @map("user_id") @db.Uuid
+  reauthRequired Boolean  @default(true) @map("reauth_required")
+  termsAgreedAt  DateTime @map("terms_agreed_at") @db.Timestamptz(6)
+  termsVersion   String   @map("terms_version")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("parent_settings")
+}
+
+model ChildProfile {
+  userId            String  @id @map("user_id") @db.Uuid
+  grade             Int     @db.SmallInt
+  approvedCount     Int     @default(0) @map("approved_count")
+  level             Int     @default(1) @db.SmallInt
+  lastSeenLevel     Int     @default(1) @map("last_seen_level") @db.SmallInt
+  avatarInitialized Boolean @default(false) @map("avatar_initialized")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("child_profiles")
+}
+
+model Session {
+  id            String    @id
+  userId        String    @map("user_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  lastActiveAt  DateTime  @default(now()) @map("last_active_at") @db.Timestamptz(6)
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(6)
+  elevatedUntil DateTime? @map("elevated_until") @db.Timestamptz(6)
+  userAgent     String?   @map("user_agent")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  tokenHash String    @id @map("token_hash")
+  userId    String    @map("user_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(6)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(6)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model LoginEvent {
+  id           BigInt   @id @default(autoincrement())
+  loginIdInput String   @map("login_id_input")
+  userId       String?  @map("user_id") @db.Uuid
+  ipHash       String   @map("ip_hash")
+  success      Boolean
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ipHash, createdAt])
+  @@index([createdAt])
+  @@map("login_events")
+}
+
+model ActivityDay {
+  userId String   @map("user_id") @db.Uuid
+  date   DateTime @db.Date
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, date])
+  @@map("activity_days")
+}
+
+model MissionCategory {
+  code      String @id
+  label     String
+  iconPath  String @map("icon_path")
+  sortOrder Int    @map("sort_order") @db.SmallInt
+
+  missions Mission[]
+
+  @@map("mission_categories")
+}
+
+model Mission {
+  id           String    @id @db.Uuid
+  familyId     String    @map("family_id") @db.Uuid
+  createdBy    String    @map("created_by") @db.Uuid
+  title        String    @db.VarChar(30)
+  description  String?   @db.VarChar(200)
+  categoryCode String    @map("category_code")
+  targetValue  Int?      @map("target_value")
+  targetUnit   String?   @map("target_unit")
+  verifyMethod String    @map("verify_method")
+  dueDate      DateTime? @map("due_date") @db.Date
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  family     Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  creator    User            @relation("MissionCreatedBy", fields: [createdBy], references: [id], onDelete: NoAction)
+  category   MissionCategory @relation(fields: [categoryCode], references: [code])
+  challenges Challenge[]
+
+  @@index([familyId, createdAt])
+  @@map("missions")
+}
+
+model Challenge {
+  id          String    @id @db.Uuid
+  missionId   String    @map("mission_id") @db.Uuid
+  familyId    String    @map("family_id") @db.Uuid
+  childUserId String    @map("child_user_id") @db.Uuid
+  status      String
+  approvedAt  DateTime? @map("approved_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  mission     Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  family      Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  child       User         @relation("ChallengeChild", fields: [childUserId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+  videos      Video[]
+
+  @@unique([missionId, childUserId])
+  @@index([childUserId, status])
+  @@index([familyId, status])
+  @@index([familyId, approvedAt])
+  @@map("challenges")
+}
+
+model Stamp {
+  code      String @id
+  label     String
+  iconPath  String @map("icon_path")
+  sortOrder Int    @map("sort_order") @db.SmallInt
+
+  submissions Submission[]
+
+  @@map("stamps")
+}
+
+model Submission {
+  id            String    @id @db.Uuid
+  challengeId   String    @map("challenge_id") @db.Uuid
+  source        String    @default("CHILD")
+  method        String
+  stampCode     String?   @map("stamp_code")
+  submittedAt   DateTime  @map("submitted_at") @db.Timestamptz(6)
+  reviewResult  String?   @map("review_result")
+  reviewerId    String?   @map("reviewer_id") @db.Uuid
+  reviewComment String?   @map("review_comment") @db.VarChar(100)
+  reviewedAt    DateTime? @map("reviewed_at") @db.Timestamptz(6)
+  childSeenAt   DateTime? @map("child_seen_at") @db.Timestamptz(6)
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  stamp     Stamp?    @relation(fields: [stampCode], references: [code])
+  reviewer  User?     @relation("SubmissionReviewer", fields: [reviewerId], references: [id], onDelete: NoAction)
+  video     Video?
+
+  @@index([challengeId, submittedAt])
+  @@map("submissions")
+}
+
+model Video {
+  id                String    @id @db.Uuid
+  familyId          String    @map("family_id") @db.Uuid
+  challengeId       String    @map("challenge_id") @db.Uuid
+  submissionId      String?   @unique @map("submission_id") @db.Uuid
+  status            String
+  rawObject         String    @map("raw_object")
+  convertedObject   String?   @map("converted_object")
+  contentType       String    @map("content_type")
+  sizeBytes         BigInt    @map("size_bytes")
+  durationSec       Decimal?  @map("duration_sec") @db.Decimal(5, 1)
+  failureReason     String?   @map("failure_reason")
+  attemptCount      Int       @default(0) @map("attempt_count") @db.SmallInt
+  deleteScheduledAt DateTime? @map("delete_scheduled_at") @db.Timestamptz(6)
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  family     Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  challenge  Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  submission Submission? @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  @@index([challengeId])
+  @@index([deleteScheduledAt])
+  @@map("videos")
+}
+
+model LevelMaster {
+  level         Int @id @db.SmallInt
+  requiredCount Int @unique @map("required_count")
+
+  avatarItems AvatarItem[]
+
+  @@map("level_master")
+}
+
+model AvatarItem {
+  id          String  @id
+  slot        String
+  name        String
+  imagePath   String  @map("image_path")
+  unlockLevel Int     @map("unlock_level") @db.SmallInt
+  isNone      Boolean @default(false) @map("is_none")
+  sortOrder   Int     @map("sort_order") @db.SmallInt
+
+  level  LevelMaster   @relation(fields: [unlockLevel], references: [level])
+  equips AvatarEquip[]
+
+  @@map("avatar_items")
+}
+
+model AvatarEquip {
+  childUserId String   @map("child_user_id") @db.Uuid
+  slot        String
+  itemId      String   @map("item_id")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  child User       @relation(fields: [childUserId], references: [id], onDelete: Cascade)
+  item  AvatarItem @relation(fields: [itemId], references: [id])
+
+  @@id([childUserId, slot])
+  @@map("avatar_equips")
+}
+
+model CommentTemplate {
+  id        Int    @id @default(autoincrement())
+  text      String
+  sortOrder Int    @map("sort_order") @db.SmallInt
+
+  @@map("comment_templates")
+}
+
+model SafetyMessage {
+  id        Int    @id @default(autoincrement())
+  text      String
+  sortOrder Int    @map("sort_order") @db.SmallInt
+
+  @@map("safety_messages")
+}
+
+model Inquiry {
+  id        String   @id @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  subject   String   @db.VarChar(50)
+  body      String   @db.VarChar(2000)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("inquiries")
+}

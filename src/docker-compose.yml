@@ -1,0 +1,16 @@
+# ローカル開発用 PostgreSQL 16（Docker がある場合）。
+# Docker がない場合は `npm run db:local`（embedded-postgres）でも同じ接続先で起動できる。
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: kids_outdoor
+    ports:
+      - "54329:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
