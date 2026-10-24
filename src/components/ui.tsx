@@ -144,11 +144,15 @@ export function Modal({
   tone?: Tone;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // 初期フォーカスは開いたときだけ。onClose は親の再描画で変わり得る。
+  useEffect(() => {
+    if (!open) return;
+    ref.current?.querySelector<HTMLElement>("input, textarea, button")?.focus();
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    ref.current?.querySelector<HTMLElement>("input, textarea, button")?.focus();
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
   if (!open) return null;
