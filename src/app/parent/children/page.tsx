@@ -121,7 +121,7 @@ export default function ChildrenPage() {
             {(id, d) => <input id={id} aria-describedby={d} className={inputClass()} value={form.loginId} onChange={set("loginId")} autoCapitalize="none" autoComplete="off" required />}
           </Field>
           <Field label="パスワード" hint="6文字以上（数字だけでもOK）。お子さまの誕生日などは避けてください" error={fields.password}>
-            {(id, d) => <input id={id} aria-describedby={d} className={inputClass()} value={form.password} onChange={set("password")} autoComplete="new-password" required />}
+            {(id, d) => <input id={id} aria-describedby={d} type="password" className={inputClass()} value={form.password} onChange={set("password")} autoComplete="new-password" required />}
           </Field>
           <div className="flex justify-end gap-2">
             <Button variant="ghost" onClick={() => setDialog(null)}>やめる</Button>
@@ -170,7 +170,7 @@ export default function ChildrenPage() {
             <p className="text-sm">{dialog.child.displayName}さん（{dialog.child.loginId}）の新しいパスワードを設定します。</p>
             <ErrorBanner message={formError} />
             <Field label="新しいパスワード" hint="6文字以上（数字だけでもOK）" error={fields.password}>
-              {(id, d) => <input id={id} aria-describedby={d} className={inputClass()} value={form.password} onChange={set("password")} autoComplete="new-password" required />}
+              {(id, d) => <input id={id} aria-describedby={d} type="password" className={inputClass()} value={form.password} onChange={set("password")} autoComplete="new-password" required />}
             </Field>
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={() => setDialog(null)}>やめる</Button>

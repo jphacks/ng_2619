@@ -26,6 +26,19 @@ const shot = async (name) => page.screenshot({ path: path.join(SHOTS, `${String(
 const step = (s) => console.log(`- ${s}`);
 const settle = () => page.waitForLoadState("networkidle");
 
+// fill() では検出できない、入力中に先頭欄へフォーカスが戻る不具合を確認する。
+async function typeAndKeepFocus(input, value) {
+  await input.click();
+  for (const character of value) {
+    await page.keyboard.type(character);
+    await input.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    if (!(await input.evaluate(element => document.activeElement === element))) {
+      throw new Error("入力中にフォーカスが別の欄へ移動しました");
+    }
+  }
+  if (await input.inputValue() !== value) throw new Error("入力値が一致しません");
+}
+
 async function login(id, pw) {
   await page.goto(`${BASE}/login`);
   await settle();
@@ -77,8 +90,8 @@ try {
   const add = page.getByRole("dialog", { name: "子どもアカウントを追加" });
   await add.getByLabel("表示名").fill("けんた");
   await add.getByLabel("学年").selectOption("2");
-  await add.getByLabel("ユーザID").fill(childId);
-  await add.getByLabel("パスワード").fill(CPW);
+  await typeAndKeepFocus(add.getByLabel("ユーザID"), childId);
+  await typeAndKeepFocus(add.getByLabel("パスワード"), CPW);
   await add.getByRole("button", { name: "作成する" }).click();
   if (!(await reauthIfAsked())) throw new Error("再認証モーダルが出ませんでした");
   await page.getByText("子どもアカウントを作成しました").waitFor();
