@@ -18,12 +18,28 @@ export class ApiError extends Error {
 
 type Options = { method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"; body?: unknown; signal?: AbortSignal };
 
+/**
+ * いま開いている画面のロール。同じブラウザで保護者と子どもが両方ログインしているとき、
+ * どちらでも呼べる API（/me、ログアウトなど）でどちらのセッションを使うかをサーバに伝える（server/http.ts）
+ */
+function screenRole(): "PARENT" | "CHILD" | null {
+  if (typeof window === "undefined") return null;
+  const p = window.location.pathname;
+  if (p === "/parent" || p.startsWith("/parent/")) return "PARENT";
+  if (p === "/kids" || p.startsWith("/kids/")) return "CHILD";
+  return null;
+}
+
 export async function api<T>(path: string, opts: Options = {}): Promise<T> {
+  const headers: Record<string, string> = {};
+  if (opts.body !== undefined) headers["Content-Type"] = "application/json";
+  const role = screenRole();
+  if (role) headers["X-Session-Role"] = role;
   let res: Response;
   try {
     res = await fetch(`/api/v1${path}`, {
       method: opts.method ?? "GET",
-      headers: opts.body !== undefined ? { "Content-Type": "application/json" } : undefined,
+      headers,
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
       credentials: "same-origin",
       cache: "no-store",

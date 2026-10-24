@@ -56,7 +56,7 @@ jphacks/project/
 
 - Next.js 15（App Router）＋ React 19 ＋ Tailwind CSS 4 ＋ TypeScript
 - Prisma 6 ＋ PostgreSQL 16、Zod 3、Argon2id（`@node-rs/argon2`）
-- 認証は自前実装（DBのセッショントークン、Cookie `sid`、画面振り分け用に `role` Cookie）
+- 認証は自前実装（DBのセッショントークン。Cookie は保護者用 `sid_parent` と子ども用 `sid_child` に分かれていて、同じブラウザで両方ログインできる。2026-10-24 変更、`src/CONTRIBUTING.md` の差分8）
 - 動画：開発は `.storage/` に保存（`STORAGE_DRIVER=local`）、本番は Cloud Storage ＋ `transcoder/`（ffmpeg）
 - バージョンは基本設計書に合わせて固定（Next 15 / Prisma 6 / Zod 3）。npm の最新は Next 16・Prisma 7・Zod 4 だが、API が変わっているため上げていない
 

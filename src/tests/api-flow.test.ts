@@ -3,6 +3,7 @@
 
 import { beforeAll, describe, expect, it } from "vitest";
 import * as login from "@/app/api/v1/auth/login/route";
+import * as logout from "@/app/api/v1/auth/logout/route";
 import * as signup from "@/app/api/v1/auth/signup/route";
 import * as reauth from "@/app/api/v1/auth/reauth/route";
 import * as me from "@/app/api/v1/me/route";
@@ -96,12 +97,31 @@ describe("認証", () => {
     expect(locked.status).toBe(423);
   });
 
-  it("子どもは保護者用APIを呼べない（403）。未ログインは401", async () => {
+  it("子どもは保護者用APIを呼べない（保護者としては未ログインなので401）。未ログインは401", async () => {
     const parent = await newParent();
     const { kid } = await newChild(parent);
-    expect((await kid.call(dashboard.GET, "GET", "/api/v1/parent/dashboard")).status).toBe(403);
+    expect((await kid.call(dashboard.GET, "GET", "/api/v1/parent/dashboard")).status).toBe(401);
     expect((await new TestClient().call(kidsHome.GET, "GET", "/api/v1/kids/home")).status).toBe(401);
     expect((await kid.call(me.GET, "GET", "/api/v1/me")).body.role).toBe("CHILD");
+  });
+
+  it("同じブラウザで保護者と子どもが両方ログインできる。ログアウトは画面のロールの方だけ", async () => {
+    const browser = await newParent();
+    const { loginId } = await newChild(browser);
+    const l = await browser.call(login.POST, "POST", "/api/v1/auth/login", { body: { loginId, password: CHILD_PASSWORD } });
+    expect(l.status).toBe(200);
+
+    expect((await browser.call(dashboard.GET, "GET", "/api/v1/parent/dashboard")).status).toBe(200);
+    expect((await browser.call(kidsHome.GET, "GET", "/api/v1/kids/home")).status).toBe(200);
+    const meAs = async (role?: string) =>
+      (await browser.call(me.GET, "GET", "/api/v1/me", { headers: role ? { "x-session-role": role } : {} })).body.role;
+    expect(await meAs("CHILD")).toBe("CHILD");
+    expect(await meAs("PARENT")).toBe("PARENT");
+    expect(await meAs()).toBe("PARENT");
+
+    await browser.call(logout.POST, "POST", "/api/v1/auth/logout", { headers: { "x-session-role": "CHILD" } });
+    expect((await browser.call(kidsHome.GET, "GET", "/api/v1/kids/home")).status).toBe(401);
+    expect((await browser.call(dashboard.GET, "GET", "/api/v1/parent/dashboard")).status).toBe(200);
   });
 
   it("他サイトからの更新リクエストは拒否する（CSRF対策）", async () => {
@@ -356,7 +376,7 @@ describe("動画（1.6.2、ローカルストレージ）", () => {
     expect(got.status).toBe(206);
     expect(await got.res.text()).toBe("fake");
 
-    // 子どもは保護者用の再生URLを取れない
-    expect((await kid.call(videoUrl.GET, "GET", "/", { params: { id: sub.body.submissionId } })).status).toBe(403);
+    // 子どもは保護者用の再生URLを取れない（保護者としては未ログインなので401）
+    expect((await kid.call(videoUrl.GET, "GET", "/", { params: { id: sub.body.submissionId } })).status).toBe(401);
   });
 });
