@@ -1,4 +1,47 @@
-# サンプル（プロダクト名）
+# そとあそびミッション
+
+保護者がミッションを入力し、子どもが挑戦・報告できるWebアプリです。
+
+## localhost で使う
+
+Node.js 22以上（npm同梱）をインストールし、このREADMEがあるフォルダで次を実行します。Windows・macOS・Linuxで共通です。
+
+すでにNode.jsを導入している場合も、`node -v` が22以上、`npm -v` が9以上であることを確認してください。古いnpmでは `Cannot read property '@google-cloud/storage' of undefined` が出ることがあります。nvm-windowsを使っている場合は `nvm install 22` → `nvm use 22` で更新し、PowerShellを開き直してください（`nvm use` は管理者権限が必要な場合があります）。
+
+```sh
+npm run setup
+npm start
+```
+
+初回の `setup` はライブラリのインストール、`.env` の生成、ローカルPostgreSQLの準備、テーブル作成、デモデータ投入を行います。初回はインターネット接続が必要です。既存の `.env` は上書きしません。
+
+`npm start` はDBとアプリをまとめて起動します。[ログイン画面](http://localhost:3000/login)を開いてください。終了はターミナルで Ctrl+C、次回は `npm start` だけです。Docker・Python・クラウドの設定は不要です。
+
+| 利用者 | ユーザID | パスワード |
+|---|---|---|
+| 保護者（デモ） | demo_parent | demo1234 |
+| 子ども（デモ） | demo_taro / demo_hana | 123456 |
+
+## データを入力する
+
+1. 自分のアカウントで使う場合は、[新規登録](http://localhost:3000/signup)から保護者を登録します。入力例：ユーザID `parent01`、パスワード `outdoor123`、表示名 `おかあさん`。メールアドレスはご自身のものを入力してください。
+2. 保護者画面の「子ども管理」で子どものアカウントを登録します。
+3. 「ミッション」から新規作成し、対象の子ども・内容・期限などをフォームで入力します。
+4. 子どものアカウントでログインして挑戦・報告し、保護者が承認します。
+
+プログラムやDBを直接編集せず、ブラウザのフォームから入力できます。デモ用アカウントでも一連の操作を試せます。
+
+## 必要なものと保存先
+
+必要環境は [requirements.txt](requirements.txt)、ライブラリ一覧は [src/package.json](src/package.json)、正確なバージョンは [src/package-lock.json](src/package-lock.json) にまとめています。Node.js製なので、導入には `pip` ではなく `npm run setup` を使います。
+
+データは `src/.pgdata/`、動画は `src/.storage/` に保存され、停止後も残ります。設定は `src/.env` です。これらはGitの対象から除外しています。ローカルではメールは送信せずサーバのログに表示します。動画変換用のffmpegは任意で、未導入の開発環境では元動画をコピーします。
+
+起動時にポートの使用エラーが出る場合は、同じアプリや手動起動したDBを終了してください。簡単起動ではポート3000・54329と標準のDB接続設定を使います。詳細な手動起動・Docker・本番ビルドの手順は [src/README.md](src/README.md) を参照してください。
+
+---
+
+以下は製品紹介用のテンプレートです。
 
 [![IMAGE ALT TEXT HERE](https://jphacks.com/wp-content/uploads/2026/07/IMG_5316.png)](https://www.youtube.com/watch?v=piaNsc6ilBI)
 

@@ -1,0 +1,10 @@
+# This is a Node.js / Next.js application, not a Python application.
+# Do not run pip install -r requirements.txt: Python packages are not required.
+# Required: Node.js >= 22 (includes npm).
+# Required: npm >= 9 to read the version 3 package-lock.json (use bundled npm).
+# Exact JavaScript dependencies: src/package.json and src/package-lock.json.
+# Install all libraries and initialize local data: npm run setup
+# Start database and web application: npm start
+# PostgreSQL 16 is installed automatically via embedded-postgres (no Docker needed).
+# Optional: ffmpeg and ffprobe for video transcoding. Development mode works without them.
+# Initial installation requires an internet connection.

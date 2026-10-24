@@ -14,6 +14,8 @@
 
 ## はじめかた
 
+通常のローカル利用は、リポジトリのルート（このフォルダの1つ上）で `npm run setup` → `npm start` を実行するだけです。DBも自動起動します。入力方法・デモアカウントは [ルートのREADME](../README.md) を参照してください。以下はDBとアプリを個別に管理する場合の手順です。簡単起動と同時に実行しないでください。
+
 ```bash
 npm install
 cp .env.example .env          # Windows は copy .env.example .env

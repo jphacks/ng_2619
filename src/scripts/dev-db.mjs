@@ -28,6 +28,7 @@ if (exists.rowCount === 0) await pg.createDatabase("kids_outdoor");
 await client.end();
 
 console.log(`PostgreSQL 16 is running on localhost:${port} (database: kids_outdoor). Ctrl+C to stop.`);
+if (process.send) process.send("ready");
 
 const stop = async () => {
   await pg.stop();
@@ -35,4 +36,5 @@ const stop = async () => {
 };
 process.on("SIGINT", stop);
 process.on("SIGTERM", stop);
+process.on("message", (message) => { if (message === "stop") void stop(); });
 setInterval(() => {}, 1 << 30);

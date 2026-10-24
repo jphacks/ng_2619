@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.env
+.env.local
+.pgdata/
+.storage/
+*.tsbuildinfo
+src/e2e/screenshots/
