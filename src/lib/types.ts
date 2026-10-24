@@ -151,6 +151,7 @@ export type KidsChallengeCard = {
   dueDate: string | null;
   targetValue: number | null;
   targetUnit: TargetUnit | null;
+  targetUnitLabel: string | null;
   verifyMethod: VerifyMethod;
   categoryCode: string;
 };

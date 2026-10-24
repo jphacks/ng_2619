@@ -3,7 +3,6 @@
 // P-03 ミッション作成・編集フォーム（F-MIS-01, 03。要件定義書 4.1.2）
 import { useState } from "react";
 import {
-  TARGET_UNIT_KIDS_LABEL,
   TARGET_UNIT_LABEL,
   TARGET_UNITS,
   VERIFY_METHOD_LABEL,
@@ -16,6 +15,8 @@ import { useApi } from "@/lib/hooks";
 import type { ChildCard, Masters, MissionDetail } from "@/lib/types";
 import { Button, Card, ErrorBanner, Field, inputClass } from "@/components/ui";
 import { CATEGORY_EMOJI } from "@/components/StatusBadge";
+import { MissionTextPreview } from "./MissionTextPreview";
+import { targetUnitForGrade } from "@/lib/kanji-grades";
 
 export type MissionFormValues = {
   title: string;
@@ -60,6 +61,8 @@ export function MissionForm({
 }) {
   const { data: masters } = useApi<Masters>("/masters");
   const [v, setV] = useState<MissionFormValues>(initial);
+  const [previewGrade, setPreviewGrade] = useState<number | null>(null);
+  const grade = previewGrade ?? childOptions?.find(c => v.childIds.includes(c.id))?.grade ?? 1;
   const set = <K extends keyof MissionFormValues>(k: K, value: MissionFormValues[K]) => setV((s) => ({ ...s, [k]: value }));
   const isEdit = mode === "edit";
   const locked = isEdit && editable && !editable.allowed;
@@ -81,7 +84,7 @@ export function MissionForm({
         <p className="rounded-xl bg-amber-100 p-3 text-sm font-bold text-amber-900">{editable.reason}</p>
       )}
       <fieldset disabled={!!locked} className="space-y-5">
-        <Field label="タイトル（必須）" hint="ひらがなで書くと子どもが読みやすいです。本名や学校名は書かないでください" error={fieldErrors.title}>
+        <Field label="タイトル（必須）" hint="漢字で入力できます。子どもの学年に合わせて自動表示します。本名や学校名は書かないでください" error={fieldErrors.title}>
           {(id, d) => (
             <input id={id} aria-describedby={d} className={inputClass("parent", !!fieldErrors.title)} value={v.title} onChange={(e) => set("title", e.target.value)} maxLength={30} placeholder="りふてぃんぐ 50かい" required />
           )}
@@ -175,12 +178,17 @@ export function MissionForm({
 
       <Card className="bg-kid-bg">
         <p className="mb-2 text-xs font-bold text-muted">子どもの画面での見え方</p>
-        <p className="text-xl font-bold text-kid-ink">{v.title || "（タイトル）"}</p>
-        {v.description && <p className="mt-1 text-lg">{v.description}</p>}
+        <Field label="プレビューする学年">
+          {id => <select id={id} className={`${inputClass()} mb-3`} value={grade} onChange={e => setPreviewGrade(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6].map(g => <option key={g} value={g}>小学{g}年生</option>)}
+          </select>}
+        </Field>
+        <MissionTextPreview title={v.title} description={v.description} grade={grade} />
         <p className="mt-2 text-lg">
-          {v.targetValue && v.targetUnit ? `もくひょう：${v.targetValue}${TARGET_UNIT_KIDS_LABEL[v.targetUnit]}　` : ""}
+          {v.targetValue && v.targetUnit ? `もくひょう：${v.targetValue}${targetUnitForGrade(v.targetUnit, grade)}　` : ""}
           {v.dueDate ? `きげん：${formatMonthDayKids(v.dueDate)}まで` : ""}
         </p>
+        <p className="mt-3 text-xs text-muted">前の学年までの漢字を表示し、未習の漢字を含む語はひらがなにします。原文は保存されます。ひらがな入力を漢字へ戻す変換は行いません。固有名詞などの読み間違いや、辞書にない漢字が残る場合があるため、読み方をご確認ください。</p>
       </Card>
 
       {!locked && (

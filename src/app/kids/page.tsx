@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CHALLENGE_STATUS_KIDS_LABEL, TARGET_UNIT_KIDS_LABEL } from "@/lib/constants";
+import { CHALLENGE_STATUS_KIDS_LABEL } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { formatMonthDayKids } from "@/lib/date";
 import { useApi } from "@/lib/hooks";
@@ -101,7 +101,7 @@ export default function KidsHomePage() {
                   <span className="min-w-0 flex-1">
                     <span className="block text-xl font-bold">{c.title}</span>
                     <span className="block text-base text-muted">
-                      {c.targetValue && c.targetUnit ? `もくひょう ${c.targetValue}${TARGET_UNIT_KIDS_LABEL[c.targetUnit]}　` : ""}
+                      {c.targetValue && c.targetUnit ? `もくひょう ${c.targetValue}${c.targetUnitLabel}　` : ""}
                       {c.dueDate ? `${formatMonthDayKids(c.dueDate)}まで` : ""}
                     </span>
                     <span className={`mt-1 inline-block rounded-full px-3 py-0.5 text-base font-bold ${c.status === "PENDING" ? "bg-orange-100 text-orange-900" : c.status === "REJECTED" ? "bg-red-100 text-red-900" : "bg-kid-soft text-kid-primary-dark"}`}>

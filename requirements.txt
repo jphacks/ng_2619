@@ -8,3 +8,4 @@
 # PostgreSQL 16 is installed automatically via embedded-postgres (no Docker needed).
 # Optional: ffmpeg and ffprobe for video transcoding. Development mode works without them.
 # Initial installation requires an internet connection.
+# Japanese reading conversion: kuromoji (local dictionary, installed via npm).
