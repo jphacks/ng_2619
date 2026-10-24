@@ -40,6 +40,7 @@ type ChallengeWithMission = { id: string; status: string; createdAt: Date; missi
 async function toCard(c: ChallengeWithMission, today: string, grade: number): Promise<KidsChallengeCard> {
   return {
     id: c.id,
+    grade,
     title: await readableText(c.mission.title, grade),
     status: effectiveStatus(c.status, c.mission.dueDate, today),
     dueDate: c.mission.dueDate ? toYmd(c.mission.dueDate) : null,
@@ -270,6 +271,7 @@ export async function records(session: SessionContext): Promise<KidsRecords> {
   ]);
   return {
     approvedCount: profile.approvedCount,
+    grade: profile.grade,
     items: await Promise.all(rows.map(async (c) => ({
       challengeId: c.id,
       title: await readableText(c.mission.title, profile.grade),

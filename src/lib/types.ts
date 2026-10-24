@@ -146,6 +146,7 @@ export type ChildSummary = {
 
 export type KidsChallengeCard = {
   id: string;
+  grade: number;
   title: string;
   status: ChallengeStatus;
   dueDate: string | null;
@@ -190,6 +191,7 @@ export type KidsChallengeDetail = KidsChallengeCard & {
 };
 
 export type KidsRecords = {
+  grade: number;
   approvedCount: number;
   items: { challengeId: string; title: string; approvedAt: string; comment: string | null }[];
 };

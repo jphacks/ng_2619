@@ -1,8 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { GRADE_KANJI, isLearnedKanji, targetUnitForGrade } from "@/lib/kanji-grades";
 import { readableText, readableNullable } from "@/server/readable-text";
+import { kidsLabel, formatMonthDayForGrade } from "@/lib/kids-labels";
 
 describe("学年に応じたミッションの表記", () => {
+  it("固定ラベルも熟語全体が既習になった学年から漢字にする", () => {
+    expect([1, 6].map(g => [kidsLabel("target", g), kidsLabel("deadline", g), kidsLabel("report", g)]))
+      .toEqual([["もくひょう", "きげん", "ほうこく"], ["目標", "期限", "報告"]]);
+    expect(kidsLabel("target", 4)).toBe("もくひょう");
+    expect(kidsLabel("target", 5)).toBe("目標");
+    expect(kidsLabel("deadline", 5)).toBe("きげん");
+  });
+
+  it("日付は1年生ではかな、2年生以降は月日を表示し日本時間を保つ", () => {
+    expect(formatMonthDayForGrade("2026-10-31", 1)).toBe("10がつ31にち");
+    expect(formatMonthDayForGrade("2026-10-31", 2)).toBe("10月31日");
+    expect(formatMonthDayForGrade(new Date("2026-10-30T15:30:00Z"), 6)).toBe("10月31日");
+  });
   it("現行の配当表1026字に重複や欠落がない", () => {
     expect(GRADE_KANJI.map(characters => Array.from(characters).length)).toEqual([80, 160, 200, 202, 193, 191]);
     expect(new Set(GRADE_KANJI.join("")).size).toBe(1026);

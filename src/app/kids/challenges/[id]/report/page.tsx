@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { VIDEO_MAX_BYTES, VIDEO_MAX_SECONDS, type VideoContentType } from "@/lib/constants";
 import { api, ApiError } from "@/lib/api";
 import { useApi } from "@/lib/hooks";
+import { kidsLabel } from "@/lib/kids-labels";
 import type { KidsChallengeDetail, Masters, SubmissionCreated, VideoUploadUrlResponse } from "@/lib/types";
 import { Button, ErrorBanner, Loading } from "@/components/ui";
 import { assetUrl } from "@/components/Avatar";
@@ -174,7 +175,7 @@ export default function ReportPage() {
   return (
     <div className="space-y-5">
       <Link href={`/kids/challenges/${challenge.id}`} className="inline-flex min-h-12 items-center text-lg font-bold text-kid-primary">‹ もどる</Link>
-      <h1 className="text-2xl font-bold">「{challenge.title}」を ほうこくしよう</h1>
+      <h1 className="text-2xl font-bold">「{challenge.title}」を {kidsLabel("report", challenge.grade)}しよう</h1>
       <ErrorBanner message={error} />
 
       {(phase === "choose" || phase === "checking") && (

@@ -10,7 +10,8 @@ import {
   type TargetUnit,
   type VerifyMethod,
 } from "@/lib/constants";
-import { formatMonthDayKids, todayJst } from "@/lib/date";
+import { todayJst } from "@/lib/date";
+import { kidsLabel, formatMonthDayForGrade } from "@/lib/kids-labels";
 import { useApi } from "@/lib/hooks";
 import type { ChildCard, Masters, MissionDetail } from "@/lib/types";
 import { Button, Card, ErrorBanner, Field, inputClass } from "@/components/ui";
@@ -185,8 +186,8 @@ export function MissionForm({
         </Field>
         <MissionTextPreview title={v.title} description={v.description} grade={grade} />
         <p className="mt-2 text-lg">
-          {v.targetValue && v.targetUnit ? `もくひょう：${v.targetValue}${targetUnitForGrade(v.targetUnit, grade)}　` : ""}
-          {v.dueDate ? `きげん：${formatMonthDayKids(v.dueDate)}まで` : ""}
+          {v.targetValue && v.targetUnit ? `${kidsLabel("target", grade)}：${v.targetValue}${targetUnitForGrade(v.targetUnit, grade)}　` : ""}
+          {v.dueDate ? `${kidsLabel("deadline", grade)}：${formatMonthDayForGrade(v.dueDate, grade)}まで` : ""}
         </p>
         <p className="mt-3 text-xs text-muted">前の学年までの漢字を表示し、未習の漢字を含む語はひらがなにします。原文は保存されます。ひらがな入力を漢字へ戻す変換は行いません。固有名詞などの読み間違いや、辞書にない漢字が残る場合があるため、読み方をご確認ください。</p>
       </Card>
