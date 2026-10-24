@@ -11,7 +11,7 @@ export const PATCH = route("parent", async (c) => {
   return updateMe(c.session, await c.body(meUpdateSchema));
 });
 
-// 退会
+// 退会（家族ごと消えるので、子どもの Cookie も消す）
 export const DELETE = route("parent", async (c) => {
   await assertReauth(c.session);
   await withdraw(c.session);

@@ -33,9 +33,15 @@ type Handler<P> = (req: Request, args: RouteArgs<P>) => Promise<Response>;
 
 // ---- Cookie ----
 
-export const SESSION_COOKIE = "sid";
-/** Middleware が画面を振り分けるためのロール。認可には使わない（3.3） */
-export const ROLE_COOKIE = "role";
+/**
+ * セッションの Cookie はロールごとに分ける。同じブラウザで保護者のタブと子どものタブを並べて使えるようにするため。
+ * Middleware は Cookie の有無で画面を振り分ける（認可には使わない。3.3）
+ */
+export const SESSION_COOKIES: Record<Role, string> = { PARENT: "sid_parent", CHILD: "sid_child" };
+const ROLES = Object.keys(SESSION_COOKIES) as Role[];
+
+/** どちらのロールでも呼べる API で、画面がどちらのセッションを使うかを伝えるヘッダ（lib/api.ts が付ける） */
+export const SESSION_ROLE_HEADER = "x-session-role";
 
 function cookie(name: string, value: string, maxAgeSec: number): string {
   const parts = [`${name}=${encodeURIComponent(value)}`, "Path=/", "HttpOnly", "SameSite=Lax", `Max-Age=${maxAgeSec}`];
@@ -44,11 +50,26 @@ function cookie(name: string, value: string, maxAgeSec: number): string {
 }
 
 export function sessionCookies(token: string, role: Role, ttlSec: number): string[] {
-  return [cookie(SESSION_COOKIE, token, ttlSec), cookie(ROLE_COOKIE, role, ttlSec)];
+  return [cookie(SESSION_COOKIES[role], token, ttlSec)];
 }
 
-export function clearedCookies(): string[] {
-  return [cookie(SESSION_COOKIE, "", 0), cookie(ROLE_COOKIE, "", 0)];
+/** role を省略すると両方のロールの Cookie を消す */
+export function clearedCookies(role?: Role): string[] {
+  return (role ? [role] : ROLES).map((r) => cookie(SESSION_COOKIES[r], "", 0));
+}
+
+/**
+ * このリクエストで使うセッションのロールを決める。
+ * ロール指定の API はそのロール。どちらでもよい API は、ヘッダの指定 → Cookie が1つだけならそれ → 保護者 の順。
+ * Cookie がなければ null
+ */
+export function sessionRole(req: Request, mode: AuthMode): Role | null {
+  if (mode === "parent") return readCookie(req, SESSION_COOKIES.PARENT) ? "PARENT" : null;
+  if (mode === "child") return readCookie(req, SESSION_COOKIES.CHILD) ? "CHILD" : null;
+  const present = ROLES.filter((r) => readCookie(req, SESSION_COOKIES[r]));
+  const hint = req.headers.get(SESSION_ROLE_HEADER)?.toUpperCase() as Role | undefined;
+  if (hint && present.includes(hint)) return hint;
+  return present.includes("PARENT") ? "PARENT" : (present[0] ?? null);
 }
 
 export function readCookie(req: Request, name: string): string | null {
@@ -74,10 +95,11 @@ export function json(body: unknown, status = 200): NextResponse {
 
 export const created = (body: unknown) => json(body, 201);
 
-function errorResponse(e: unknown): Response {
+/** sessionRole：セッションを確認したロール。ログインが必要なときは、そのロールの Cookie だけを消す */
+function errorResponse(e: unknown, sessionRole: Role | null = null): Response {
   if (e instanceof AppError) {
     const res = json({ error: { code: e.code, message: e.message, ...e.extra } }, e.status);
-    return e.status === 401 && e.code === "AUTH_REQUIRED" ? withCookies(res, clearedCookies()) : res;
+    return e.status === 401 && e.code === "AUTH_REQUIRED" && sessionRole ? withCookies(res, clearedCookies(sessionRole)) : res;
   }
   if (e instanceof ZodError) {
     const fields: Record<string, string> = {};
@@ -114,13 +136,19 @@ function checkOrigin(req: Request) {
   if (!host || originHost !== host) throw errors.forbidden("不正なリクエストです");
 }
 
-async function requireSession(req: Request, mode: Exclude<AuthMode, "none">): Promise<SessionContext> {
-  const token = readCookie(req, SESSION_COOKIE);
-  if (!token) throw errors.authRequired();
-  const session = await loadSession(token);
+/** role の Cookie のセッションを読む。Cookie の名前とユーザのロールが違うものは無効とする */
+async function loadRoleSession(req: Request, role: Role): Promise<SessionContext | null> {
+  const token = readCookie(req, SESSION_COOKIES[role]);
+  const session = token ? await loadSession(token) : null;
+  return session?.role === role ? session : null;
+}
+
+/** role は sessionRole() で API のロール指定から決めたもの。セッションのロールは loadRoleSession() で一致を確認済み */
+async function requireSession(req: Request, role: Role | null): Promise<SessionContext> {
+  // 別のロールでだけログインしている場合（例：子どもが保護者の API を呼んだ）も、このロールでは未ログインとして扱う
+  if (!role) throw errors.authRequired();
+  const session = await loadRoleSession(req, role);
   if (!session) throw errors.authRequired();
-  if (mode === "parent" && session.role !== "PARENT") throw errors.forbidden();
-  if (mode === "child" && session.role !== "CHILD") throw errors.forbidden();
   return session;
 }
 
@@ -149,14 +177,14 @@ export function route<P = Record<string, never>>(
 export function route<P>(auth: AuthMode, fn: (ctx: never) => Promise<unknown>): Handler<P> {
   return async (req, args) => {
     let session: SessionContext | null = null;
+    const role = sessionRole(req, auth);
     try {
       checkOrigin(req);
       const params = (args?.params ? await args.params : {}) as P;
       if (auth !== "none") {
-        session = await requireSession(req, auth);
+        session = await requireSession(req, role);
       } else {
-        const token = readCookie(req, SESSION_COOKIE);
-        session = token ? await loadSession(token) : null;
+        session = role ? await loadRoleSession(req, role) : null;
       }
       const ctx: PublicContext<P> = {
         req,
@@ -182,7 +210,7 @@ export function route<P>(auth: AuthMode, fn: (ctx: never) => Promise<unknown>): 
       }
       return res;
     } catch (e) {
-      return errorResponse(e);
+      return errorResponse(e, role);
     }
   };
 }

@@ -210,6 +210,32 @@ try {
   await settle();
   await page.waitForURL(/\/kids$/);
   await settle();
+
+  step("同じブラウザで保護者のタブと子どものタブを並べて使える");
+  const parentTab = await ctx.newPage();
+  await parentTab.goto(`${BASE}/login`);
+  await parentTab.getByLabel("ユーザID").fill(parentId);
+  await parentTab.getByLabel("パスワード", { exact: true }).fill(PW);
+  await parentTab.getByRole("button", { name: "ログイン" }).click();
+  await parentTab.waitForURL("**/parent");
+  // 保護者のあとに、もう一方のタブで子どもがログインし直す
+  await page.getByRole("button", { name: "おわる" }).click();
+  await page.waitForURL("**/login");
+  await login(childId, CPW);
+  await page.waitForURL(/\/kids$/);
+  // 保護者のタブで操作しても、子どもの画面に移らない
+  await parentTab.locator('a[href="/parent/missions"]').first().click();
+  await parentTab.waitForURL("**/parent/missions");
+  await parentTab.getByText("さかあがり").first().waitFor();
+  await page.goto(`${BASE}/kids/records`);
+  await page.getByText("たっせいした ミッション").waitFor();
+  // 子どもがログアウトしても、保護者はログインしたまま
+  await page.goto(`${BASE}/kids`);
+  await page.getByRole("button", { name: "おわる" }).click();
+  await page.waitForURL("**/login");
+  await parentTab.reload();
+  await parentTab.getByText("さかあがり").first().waitFor();
+  if (!parentTab.url().endsWith("/parent/missions")) throw new Error(`保護者のタブが移動した: ${parentTab.url()}`);
   console.log("OK: all steps passed");
 } catch (e) {
   console.log(`FAILED at step: ${e.message}`);
