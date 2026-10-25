@@ -6,6 +6,7 @@ import { useApi } from "@/lib/hooks";
 import type { ParentDashboard } from "@/lib/types";
 import { Avatar } from "@/components/Avatar";
 import { Card, EmptyState, ErrorBanner, LinkButton, Loading } from "@/components/ui";
+import { GrowthDashboard } from "@/components/parent/GrowthDashboard";
 
 export default function ParentHomePage() {
   const { data, error, loading } = useApi<ParentDashboard>("/parent/dashboard");
@@ -28,6 +29,8 @@ export default function ParentHomePage() {
       <LinkButton href="/parent/missions/new" block>
         ＋ ミッションを作る
       </LinkButton>
+
+      <GrowthDashboard />
 
       <section className="space-y-3">
         <h2 className="text-lg font-bold">お子さま</h2>

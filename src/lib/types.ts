@@ -43,6 +43,20 @@ export type ChildCard = {
 
 export type ParentDashboard = { pendingCount: number; children: ChildCard[] };
 
+export type GrowthPoint = { id: string; date: string; value: number; title: string };
+export type GrowthSeries = {
+  childId: string;
+  categoryCode: string;
+  unit: TargetUnit;
+  recordCount: number;
+  points: GrowthPoint[];
+};
+export type GrowthData = {
+  children: { id: string; displayName: string }[];
+  categories: { code: string; label: string }[];
+  series: GrowthSeries[];
+};
+
 export type ChildrenListResponse = { items: ChildCard[]; max: number };
 
 export type MissionChallenge = {
