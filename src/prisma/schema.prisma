@@ -209,6 +209,7 @@ model Submission {
   source        String    @default("CHILD")
   method        String
   stampCode     String?   @map("stamp_code")
+  childComment  String?   @map("child_comment") @db.VarChar(200)
   submittedAt   DateTime  @map("submitted_at") @db.Timestamptz(6)
   reviewResult  String?   @map("review_result")
   reviewerId    String?   @map("reviewer_id") @db.Uuid

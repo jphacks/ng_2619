@@ -120,6 +120,12 @@ export default function ApprovalDetailPage() {
       </Card>
 
       <VideoPanel detail={data} reload={reload} />
+      {data.childComment && (
+        <Card className="space-y-2">
+          <h2 className="font-bold">お子さまからのコメント</h2>
+          <p className="whitespace-pre-wrap break-words">{data.childComment}</p>
+        </Card>
+      )}
       {data.method === "VISUAL" && (
         <p className="rounded-xl bg-white p-3 text-sm ring-1 ring-black/5">お子さまから「おうちのひとに みてもらった」と申請がありました。見届けた内容を確認して承認してください。</p>
       )}

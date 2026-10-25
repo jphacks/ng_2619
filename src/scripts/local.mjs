@@ -69,6 +69,8 @@ try {
     await run("node_modules/tsx/dist/cli.mjs", ["prisma/seed.ts"], { SEED_DEMO: "1" });
     console.log("初回設定が完了しました。npm start で起動できます。");
   } else {
+    // アプリ更新で追加されたDB変更も、ローカル起動時に適用する（既存データは保持）。
+    await run("node_modules/prisma/build/index.js", ["migrate", "deploy"]);
     console.log("http://localhost:3000 をブラウザで開いてください。終了: Ctrl+C");
     await run("node_modules/next/dist/bin/next", ["dev", "--hostname", "127.0.0.1", "--port", "3000"]);
   }

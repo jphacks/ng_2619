@@ -68,6 +68,7 @@ export async function getSubmissionDetail(familyId: string, submissionId: string
     submittedAt: s.submittedAt.toISOString(),
     stampLabel: s.stamp?.label ?? null,
     reviewResult: s.reviewResult as SubmissionDetail["reviewResult"],
+    childComment: s.childComment,
     reviewComment: s.reviewComment,
     child: { id: s.challenge.child.id, displayName: s.challenge.child.displayName },
     mission: {

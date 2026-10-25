@@ -74,6 +74,8 @@ export async function processRawObject(objectKey: string): Promise<"done" | "ski
   try {
     await storage.downloadToFile("raw", video.rawObject, input);
     let duration: number | null = null;
+    let outputType = "video/mp4";
+    let extension = ".mp4";
     if (await hasFfmpeg()) {
       duration = await probeDuration(input);
       const r = await run(env.ffmpegPath, ffmpegArgs(input, output));
@@ -82,12 +84,15 @@ export async function processRawObject(objectKey: string): Promise<"done" | "ski
       // 開発環境に ffmpeg がない場合は変換せずにコピーする（iPhoneのHEVC動画はAndroidで再生できないことがある）
       logger.warn("ffmpeg not found: copying video without transcoding (dev only)", { videoId });
       await fs.copyFile(input, output);
+      // コピー時は元のコンテナ形式を維持する。WebMをMP4と偽って配信しない。
+      outputType = video.contentType;
+      extension = outputType === "video/webm" ? ".webm" : outputType === "video/quicktime" ? ".mov" : ".mp4";
     } else {
       throw new Error("ffmpeg not found");
     }
 
-    const key = convertedKey(video.familyId, video.id);
-    await storage.uploadFromFile("videos", key, output, "video/mp4");
+    const key = convertedKey(video.familyId, video.id).replace(/\.mp4$/, extension);
+    await storage.uploadFromFile("videos", key, output, outputType);
     const updated = await prisma.video.updateMany({
       where: { id: videoId, status: { in: ["UPLOADING", "PROCESSING"] } },
       data: { status: "READY", convertedObject: key, durationSec: duration, failureReason: null },

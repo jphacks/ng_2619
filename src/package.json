@@ -21,7 +21,8 @@
     "avatars:generate": "tsx scripts/generate-avatar-placeholders.ts",
     "jobs": "tsx jobs/run.ts",
     "transcoder": "tsx transcoder/server.ts",
-    "e2e": "node e2e/flow.mjs e2e/screenshots"
+    "e2e": "node e2e/flow.mjs e2e/screenshots",
+    "e2e:camera": "node e2e/camera.mjs"
   },
   "dependencies": {
     "@google-cloud/storage": "^7.17.0",

@@ -335,7 +335,7 @@ describe("アバター", () => {
 });
 
 describe("動画（1.6.2、ローカルストレージ）", () => {
-  it("アップロード → 申請 → 変換 → 保護者が再生URLを取得", async () => {
+  it.each(["video/mp4", "video/webm"])("%s：アップロード → 申請 → 変換 → 保護者が再生URLを取得", async (contentType) => {
     const parent = await newParent();
     const { kid, childId } = await newChild(parent);
     const { challengeIds } = await newMission(parent, [childId], "VIDEO");
@@ -348,24 +348,29 @@ describe("動画（1.6.2、ローカルストレージ）", () => {
 
     const up = await kid.call(kidsUpload.POST, "POST", "/", {
       params: { id },
-      body: { contentType: "video/mp4", sizeBytes: data.length, durationSec: 12.3 },
+      body: { contentType, sizeBytes: data.length, durationSec: 12.3 },
     });
     expect(up.status).toBe(200);
     const url = new URL(up.body.uploadUrl, "http://localhost:3000");
     const keyParts = url.pathname.replace("/api/dev-storage/", "").split("/");
     const put = await kid.call(devStorage.PUT, "PUT", `${url.pathname}${url.search}`, {
       params: { key: keyParts },
-      headers: { "content-type": "video/mp4" },
+      headers: { "content-type": contentType },
       raw: data,
     });
     expect(put.status).toBe(200);
 
-    const sub = await kid.call(kidsSubmit.POST, "POST", "/", { params: { id }, body: { method: "VIDEO", videoId: up.body.videoId } });
+    const tooLong = await kid.call(kidsSubmit.POST, "POST", "/", { params: { id }, body: { method: "VIDEO", videoId: up.body.videoId, childComment: "あ".repeat(201) } });
+    expect(tooLong.status).toBe(400);
+    const childComment = contentType === "video/mp4" ? " さいごまで がんばったよ！\nたのしかった " : "";
+    const sub = await kid.call(kidsSubmit.POST, "POST", "/", { params: { id }, body: { method: "VIDEO", videoId: up.body.videoId, childComment } });
     expect(sub.status).toBe(201);
 
     await waitFor(async () => (await prisma.video.findUnique({ where: { id: up.body.videoId } }))?.status === "READY");
     const detail = await parent.call(submission.GET, "GET", "/", { params: { id: sub.body.submissionId } });
     expect(detail.body.video.status).toBe("READY");
+    expect(detail.body.childComment).toBe(childComment.trim() || null);
+    expect(detail.body.reviewComment).toBeNull();
     const v = await parent.call(videoUrl.GET, "GET", "/", { params: { id: sub.body.submissionId } });
     expect(v.status).toBe(200);
     const getUrl = new URL(v.body.url, "http://localhost:3000");
@@ -374,6 +379,7 @@ describe("動画（1.6.2、ローカルストレージ）", () => {
       headers: { range: "bytes=0-3" },
     });
     expect(got.status).toBe(206);
+    expect(got.res.headers.get("content-type")).toBe(contentType);
     expect(await got.res.text()).toBe("fake");
 
     // 子どもは保護者用の再生URLを取れない（保護者としては未ログインなので401）

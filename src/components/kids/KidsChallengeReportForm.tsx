@@ -4,22 +4,23 @@
 import { useEffect, useRef, useState } from "react";
 import { VIDEO_MAX_BYTES, VIDEO_MAX_SECONDS, type VideoContentType } from "@/lib/constants";
 import { api, ApiError } from "@/lib/api";
-import { useApi } from "@/lib/hooks";
-import type { KidsChallengeDetail, Masters, SubmissionCreated, VideoUploadUrlResponse } from "@/lib/types";
-import { Button, ErrorBanner, Loading } from "@/components/ui";
-import { assetUrl } from "@/components/Avatar";
+import type { KidsChallengeDetail, SubmissionCreated, VideoUploadUrlResponse } from "@/lib/types";
+import { Button, ErrorBanner, Field, inputClass, Loading } from "@/components/ui";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import ParentMessage from "./ParentMessage";
+import { CameraRecorder } from "./CameraRecorder";
+import { kidsLabel } from "@/lib/kids-labels";
 
 type Phase = "choose" | "checking" | "ready" | "uploading" | "sending" | "retry";
 
 /** 一部の Android では file.type が空になるため、拡張子からも判断する */
 function contentTypeOf(file: File): VideoContentType | null {
-  if (file.type === "video/mp4" || file.type === "video/quicktime") return file.type;
+  const type = file.type.split(";")[0];
+  if (type === "video/mp4" || type === "video/quicktime" || type === "video/webm") return type;
   const ext = file.name.split(".").pop()?.toLowerCase();
   if (ext === "mp4" || ext === "m4v") return "video/mp4";
   if (ext === "mov") return "video/quicktime";
+  if (ext === "webm") return "video/webm";
   return null;
 }
 
@@ -58,16 +59,15 @@ type Props = {
 };
 export default function KidsChallengeReportForm({ challenge }: Props) {
   const router = useRouter();
-  const { data: masters } = useApi<Masters>("/masters");
   const [phase, setPhase] = useState<Phase>("choose");
   const [method, setMethod] = useState<"VIDEO" | "VISUAL" | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [stamp, setStamp] = useState<string | null>(null);
+  const [childComment, setChildComment] = useState("");
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [finished, setFinished] = useState<string | null>(null);
-  const cameraInput = useRef<HTMLInputElement>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   // アップロード中に画面を離れようとしたら確認する
@@ -86,6 +86,10 @@ export default function KidsChallengeReportForm({ challenge }: Props) {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
+    await selectFile(f);
+  }
+
+  async function selectFile(f: File) {
     setError(null);
     setPhase("checking");
     if (!contentTypeOf(f)) {
@@ -145,7 +149,7 @@ export default function KidsChallengeReportForm({ challenge }: Props) {
       setPhase("sending");
       await api<SubmissionCreated>(`/kids/challenges/${challenge.id}/submissions`, {
         method: "POST",
-        body: { method, videoId, stampCode: stamp },
+        body: { method, videoId, childComment },
       });
       router.replace(`/kids/challenges/${challenge.id}/done`);
     } catch (e) {
@@ -173,15 +177,19 @@ export default function KidsChallengeReportForm({ challenge }: Props) {
 
   return (
     <div className="space-y-5">
-      {/* <Link href={`/kids/challenges/${challenge.id}`} className="inline-flex min-h-12 items-center text-lg font-bold text-kid-primary">‹ もどる</Link> */}
-      <h1 className="text-2xl font-bold">「{challenge.title}」を ほうこくしよう</h1>
+      <h1 className="text-2xl font-bold">「{challenge.title}」を {kidsLabel("report", challenge.grade)}しよう</h1>
       <ErrorBanner message={error} />
 
-      {(phase === "choose" || phase === "checking") && (
+      {cameraOpen && <CameraRecorder onCancel={() => setCameraOpen(false)} onCapture={captured => {
+        setCameraOpen(false);
+        void selectFile(captured);
+      }} />}
+
+      {!cameraOpen && (phase === "choose" || phase === "checking") && (
         <div className="grid gap-3">
           {allowVideo && (
             <>
-              <Button tone="kid" block disabled={busy} onClick={() => cameraInput.current?.click()}>🎥 どうがを とる</Button>
+              <Button tone="kid" block disabled={busy} onClick={() => { setError(null); setCameraOpen(true); }}>🎥 どうがを とる</Button>
               <Button tone="kid" variant="secondary" block disabled={busy} onClick={() => fileInput.current?.click()}>📁 どうがを えらぶ</Button>
               <p className="text-center text-base text-muted">みじかく とろう（30びょう くらい）。Wi-Fiで おくると はやいよ</p>
             </>
@@ -200,9 +208,7 @@ export default function KidsChallengeReportForm({ challenge }: Props) {
               👀 おうちのひとに みてもらいたい！
             </Button>
           )}
-          {/* capture 属性は一部の Android で無視されるため、選ぶボタンも用意している（RK-04） */}
-          <input ref={cameraInput} type="file" accept="video/*" capture="environment" className="hidden" onChange={onPick} />
-          <input ref={fileInput} type="file" accept="video/mp4,video/quicktime,video/*" className="hidden" onChange={onPick} />
+          <input ref={fileInput} type="file" accept="video/mp4,video/quicktime,video/webm,video/*" className="hidden" onChange={onPick} />
           {phase === "checking" && <Loading label="どうがを かくにんちゅう…" />}
         </div>
       )}
@@ -211,27 +217,9 @@ export default function KidsChallengeReportForm({ challenge }: Props) {
         <div className="space-y-5">
           {method === "VIDEO" && previewUrl && <video src={previewUrl} controls playsInline className="w-full rounded-3xl bg-black" />}
 
-          {masters && masters.stamps.length > 0 && (
-            <div>
-              <ParentMessage />
-              <p className="mb-2 text-lg font-bold">ひとことスタンプ（えらばなくても いいよ）</p>
-              <div className="grid grid-cols-2 gap-2">
-                {masters.stamps.map((s) => (
-                  <button
-                    key={s.code}
-                    type="button"
-                    aria-pressed={stamp === s.code}
-                    disabled={busy}
-                    onClick={() => setStamp((cur) => (cur === s.code ? null : s.code))}
-                    className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl border-2 text-lg font-bold ${stamp === s.code ? "border-kid-primary bg-kid-soft" : "border-line bg-white"}`}
-                  >
-                    <img src={assetUrl(s.iconPath)} alt="" className="h-8 w-8" />
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <Field label="コメント" tone="kid" hint="がんばったことや かんそうを かいてね（200もじまで・かかなくても いいよ）">
+            {(id, describedBy) => <textarea id={id} aria-describedby={describedBy} className={`${inputClass("kid")} py-3`} rows={3} maxLength={200} disabled={busy} value={childComment} onChange={e => setChildComment(e.target.value)} placeholder="れい：さいごまで がんばったよ！" />}
+          </Field>
 
           {phase === "uploading" && (
             <div className="space-y-2" role="status">
@@ -255,6 +243,7 @@ export default function KidsChallengeReportForm({ challenge }: Props) {
                 setMethod(null);
                 setFile(null);
                 setPreviewUrl(null);
+                setChildComment("");
                 setError(null);
               }}
             >
