@@ -7,12 +7,11 @@ export default function LoginPage() {
   return (
     <main className="mx-auto max-w-[480px] px-4 py-10">
       {notice && (
-        <div role="status" className="mb-6 rounded-xl bg-amber-100 p-3 text-sm font-bold text-amber-900">
+        <div role="status" className="mb-6 rounded-xl bg-amber-100 p-3 text-sm font-extrabold text-amber-900">
           {notice}
         </div>
       )}
-      <h1 className="text-center text-3xl font-bold text-kid-primary">そとあそびミッション</h1>
-      <p className="mt-2 text-center text-muted">ログインしてね</p>
+      <h1 className="text-center text-7xl font-extrabold text-kid-primary" style={{ WebkitTextStroke: "0.1px white" }}>ちるちゃれ</h1>
       <Suspense>
         <LoginForm />
       </Suspense>
