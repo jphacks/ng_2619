@@ -20,6 +20,13 @@ try {
     await route.fulfill({ json: body });
   });
   await page.goto(`${base}/parent`);
+  await page.getByText("承認待ちの申請", { exact: true }).waitFor();
+  assert.equal(await page.getByRole("heading", { name: "お子さまの成長", exact: true }).count(), 0);
+  const menu = page.getByRole("navigation", { name: "メニュー", exact: true });
+  assert.deepEqual(await menu.getByRole("link").allTextContents(), ["🏠ホーム", "🚩ミッション", "📈成長", "✅承認", "⚙️設定"]);
+  await menu.getByRole("link", { name: "成長", exact: true }).click();
+  await page.waitForURL("**/parent/growth");
+  assert.equal(await menu.getByRole("link", { name: "成長", exact: true }).getAttribute("aria-current"), "page");
   const original = page.url();
   await page.getByRole("group", { name: "たろうのリフティングの折れ線グラフ（回）", exact: true }).waitFor();
   await page.getByRole("button", { name: "2026-09-02 10回", exact: true }).click();
@@ -40,6 +47,7 @@ try {
   assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
   assert.deepEqual(errors, []);
   mkdirSync("e2e/screenshots", { recursive: true });
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: "e2e/screenshots/growth-mobile.png", fullPage: true });
   console.log("PASS: child/category switching without navigation, chart point selection, units, empty state and mobile layout.");
 } finally { await browser.close(); }
