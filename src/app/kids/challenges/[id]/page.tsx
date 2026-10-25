@@ -7,8 +7,9 @@ import { CHALLENGE_STATUS_KIDS_LABEL, TARGET_UNIT_KIDS_LABEL } from "@/lib/const
 import { formatMonthDayKids } from "@/lib/date";
 import { useApi } from "@/lib/hooks";
 import type { KidsChallengeDetail } from "@/lib/types";
-import { ErrorBanner, LinkButton, Loading } from "@/components/ui";
 import { CATEGORY_EMOJI } from "@/components/StatusBadge";
+import KidsChallengeReportForm from "@/components/kids/KidsChallengeReportForm";
+import { ErrorBanner, Loading } from "@/components/ui";
 
 const HOW: Record<KidsChallengeDetail["verifyMethod"], string> = {
   VIDEO: "どうがを とって おくってね",
@@ -52,14 +53,13 @@ export default function KidsChallengePage() {
       <p className="rounded-2xl bg-kid-sun p-3 text-center text-lg font-bold">⚠️ くるまに きをつけて あそぼう</p>
 
       {canReport ? (
-        <LinkButton tone="kid" href={`/kids/challenges/${data.id}/report`} block>
-          できた！
-        </LinkButton>
+        <KidsChallengeReportForm challenge={data} />
       ) : (
         <p className="rounded-2xl bg-white p-4 text-center text-xl font-bold text-muted">
-          {CHALLENGE_STATUS_KIDS_LABEL[data.status] ?? "この ミッションは おわったよ"}
+        {CHALLENGE_STATUS_KIDS_LABEL[data.status] ?? "この ミッションは おわったよ"}
         </p>
-      )}
+    )}
+      
     </div>
   );
 }
