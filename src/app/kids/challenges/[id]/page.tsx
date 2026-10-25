@@ -3,8 +3,8 @@
 // C-02 ミッション詳細（F-CHL-02）
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CHALLENGE_STATUS_KIDS_LABEL, TARGET_UNIT_KIDS_LABEL } from "@/lib/constants";
-import { formatMonthDayKids } from "@/lib/date";
+import { CHALLENGE_STATUS_KIDS_LABEL } from "@/lib/constants";
+import { kidsLabel, formatMonthDayForGrade } from "@/lib/kids-labels";
 import { useApi } from "@/lib/hooks";
 import type { KidsChallengeDetail } from "@/lib/types";
 import { CATEGORY_EMOJI } from "@/components/StatusBadge";
@@ -34,12 +34,12 @@ export default function KidsChallengePage() {
         {data.description && <p className="mt-3 text-xl leading-relaxed">{data.description}</p>}
         <dl className="mt-4 space-y-2 text-lg">
           {data.targetValue && data.targetUnit && (
-            <div className="flex gap-2"><dt className="font-bold">もくひょう</dt><dd>{data.targetValue}{TARGET_UNIT_KIDS_LABEL[data.targetUnit]}</dd></div>
+            <div className="flex gap-2"><dt className="font-bold">{kidsLabel("target", data.grade)}</dt><dd>{data.targetValue}{data.targetUnitLabel}</dd></div>
           )}
           {data.dueDate && (
-            <div className="flex gap-2"><dt className="font-bold">きげん</dt><dd>{formatMonthDayKids(data.dueDate)}まで</dd></div>
+            <div className="flex gap-2"><dt className="font-bold">{kidsLabel("deadline", data.grade)}</dt><dd>{formatMonthDayForGrade(data.dueDate, data.grade)}まで</dd></div>
           )}
-          <div className="flex gap-2"><dt className="font-bold">ほうこく</dt><dd>{HOW[data.verifyMethod]}</dd></div>
+          <div className="flex gap-2"><dt className="font-bold">{kidsLabel("report", data.grade)}</dt><dd>{HOW[data.verifyMethod]}</dd></div>
         </dl>
       </section>
 

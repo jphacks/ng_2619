@@ -146,11 +146,13 @@ export type ChildSummary = {
 
 export type KidsChallengeCard = {
   id: string;
+  grade: number;
   title: string;
   status: ChallengeStatus;
   dueDate: string | null;
   targetValue: number | null;
   targetUnit: TargetUnit | null;
+  targetUnitLabel: string | null;
   verifyMethod: VerifyMethod;
   categoryCode: string;
 };
@@ -189,6 +191,7 @@ export type KidsChallengeDetail = KidsChallengeCard & {
 };
 
 export type KidsRecords = {
+  grade: number;
   approvedCount: number;
   items: { challengeId: string; title: string; approvedAt: string; comment: string | null }[];
 };

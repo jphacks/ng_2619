@@ -70,7 +70,7 @@ export function LoginForm() {
               required
             />
             <Button variant="secondary" onClick={() => setShow((s) => !s)} aria-pressed={show} className="min-h-14 shrink-0">
-              {show ? "かくす" : "みせる"}
+              {show ? "かくす" : "みる"}
             </Button>
           </div>
         )}

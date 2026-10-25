@@ -1,7 +1,7 @@
 "use client";
 
 // C-05 きろく（F-CHL-07）
-import { formatMonthDayKids } from "@/lib/date";
+import { formatMonthDayForGrade } from "@/lib/kids-labels";
 import { useApi } from "@/lib/hooks";
 import type { KidsRecords } from "@/lib/types";
 import { EmptyState, ErrorBanner, Loading } from "@/components/ui";
@@ -24,7 +24,7 @@ export default function RecordsPage() {
         <ul className="space-y-3">
           {data.items.map((r) => (
             <li key={r.challengeId} className="rounded-3xl bg-white p-4 shadow-sm">
-              <p className="text-base text-muted">{formatMonthDayKids(new Date(r.approvedAt))}</p>
+              <p className="text-base text-muted">{formatMonthDayForGrade(new Date(r.approvedAt), data.grade)}</p>
               <p className="text-xl font-bold">🏅 {r.title}</p>
               {r.comment && <p className="mt-1 text-lg">おうちのひとから：「{r.comment}」</p>}
             </li>

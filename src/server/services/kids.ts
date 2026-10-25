@@ -24,6 +24,8 @@ import { isUniqueViolation } from "../http";
 import { rawKey, storage, UPLOAD_URL_TTL_SEC } from "../storage";
 import { loadAvatarLayers } from "./avatar";
 import { deleteVideoObjects } from "./videos";
+import { readableText, readableNullable } from "../readable-text";
+import { targetUnitForGrade } from "@/lib/kanji-grades";
 
 type ChallengeWithMission = { id: string; status: string; createdAt: Date; mission: {
   title: string;
@@ -35,14 +37,16 @@ type ChallengeWithMission = { id: string; status: string; createdAt: Date; missi
   categoryCode: string;
 } };
 
-function toCard(c: ChallengeWithMission, today: string): KidsChallengeCard {
+async function toCard(c: ChallengeWithMission, today: string, grade: number): Promise<KidsChallengeCard> {
   return {
     id: c.id,
-    title: c.mission.title,
+    grade,
+    title: await readableText(c.mission.title, grade),
     status: effectiveStatus(c.status, c.mission.dueDate, today),
     dueDate: c.mission.dueDate ? toYmd(c.mission.dueDate) : null,
     targetValue: c.mission.targetValue,
     targetUnit: c.mission.targetUnit as TargetUnit | null,
+    targetUnitLabel: c.mission.targetUnit ? targetUnitForGrade(c.mission.targetUnit as TargetUnit, grade) : null,
     verifyMethod: c.mission.verifyMethod as VerifyMethod,
     categoryCode: c.mission.categoryCode,
   };
@@ -68,8 +72,8 @@ export async function home(session: SessionContext): Promise<KidsHome> {
   ]);
 
   // 期限が近い順、期限なしは新しい順（F-CHL-01）。期限切れは出さない
-  const cards = challenges
-    .map((c) => ({ card: toCard(c, today), createdAt: c.createdAt }))
+  const cards = (await Promise.all(challenges
+    .map(async (c) => ({ card: await toCard(c, today, profile.grade), createdAt: c.createdAt }))))
     .filter((x) => x.card.status !== "EXPIRED")
     .sort((a, b) => {
       if (a.card.dueDate && b.card.dueDate) return a.card.dueDate.localeCompare(b.card.dueDate);
@@ -79,13 +83,13 @@ export async function home(session: SessionContext): Promise<KidsHome> {
     })
     .map((x) => x.card);
 
-  const notices: KidsNotice[] = reviewed.map((s) => ({
+  const notices: KidsNotice[] = await Promise.all(reviewed.map(async (s) => ({
     submissionId: s.id,
     kind: s.source === "PARENT" ? "PARENT_COMPLETED" : (s.reviewResult as "APPROVED" | "REJECTED"),
-    missionTitle: s.challenge.mission.title,
-    comment: s.reviewComment,
+    missionTitle: await readableText(s.challenge.mission.title, profile.grade),
+    comment: await readableNullable(s.reviewComment, profile.grade),
     reviewedAt: (s.reviewedAt ?? s.submittedAt).toISOString(),
-  }));
+  })));
 
   let levelUp: KidsHome["levelUp"] = null;
   if (profile.level > profile.lastSeenLevel) {
@@ -125,11 +129,12 @@ export async function challengeDetail(session: SessionContext, challengeId: stri
     mission: true,
     submissions: { where: { reviewResult: "REJECTED" }, orderBy: { reviewedAt: "desc" }, take: 1 },
   });
-  const card = toCard(c, todayJst());
+  const profile = await prisma.childProfile.findUniqueOrThrow({ where: { userId: session.userId } });
+  const card = await toCard(c, todayJst(), profile.grade);
   return {
     ...card,
-    description: c.mission.description,
-    rejectionComment: card.status === "REJECTED" ? (c.submissions[0]?.reviewComment ?? null) : null,
+    description: await readableNullable(c.mission.description, profile.grade),
+    rejectionComment: card.status === "REJECTED" ? await readableNullable(c.submissions[0]?.reviewComment ?? null, profile.grade) : null,
   };
 }
 
@@ -266,11 +271,12 @@ export async function records(session: SessionContext): Promise<KidsRecords> {
   ]);
   return {
     approvedCount: profile.approvedCount,
-    items: rows.map((c) => ({
+    grade: profile.grade,
+    items: await Promise.all(rows.map(async (c) => ({
       challengeId: c.id,
-      title: c.mission.title,
+      title: await readableText(c.mission.title, profile.grade),
       approvedAt: (c.approvedAt ?? c.updatedAt).toISOString(),
-      comment: c.submissions[0]?.reviewComment ?? null,
-    })),
+      comment: await readableNullable(c.submissions[0]?.reviewComment ?? null, profile.grade),
+    }))),
   };
 }

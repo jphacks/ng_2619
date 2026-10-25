@@ -31,7 +31,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Docker イメージ用（Dockerfile で NEXT_OUTPUT=standalone を設定）。ローカルの npm start では使わない
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
-  serverExternalPackages: ["@node-rs/argon2", "@google-cloud/storage"],
+  serverExternalPackages: ["@node-rs/argon2", "@google-cloud/storage", "kuromoji"],
+  outputFileTracingIncludes: { "/*": ["./node_modules/kuromoji/dict/**/*"] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
