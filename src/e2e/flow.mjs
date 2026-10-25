@@ -101,8 +101,9 @@ try {
   await page.goto(`${BASE}/parent/missions/new`);
   await settle();
   await page.getByLabel("タイトル（必須）").fill("さかあがり");
-  await page.getByLabel("新しいカテゴリ").fill("鉄棒");
   await page.getByRole("button", { name: "カテゴリを追加", exact: true }).click();
+  await page.getByLabel("新しいカテゴリ").fill("鉄棒");
+  await page.getByRole("button", { name: "追加する", exact: true }).click();
   await page.getByRole("button", { name: "鉄棒" }).click();
   await shot("mission-new");
   await page.getByRole("button", { name: "ミッションを作る" }).click();
@@ -115,8 +116,9 @@ try {
   await page.goto(`${BASE}/parent/missions/new`);
   await settle();
   await page.getByLabel("タイトル（必須）").fill("なわとび 30かい");
-  await page.getByLabel("新しいカテゴリ").fill("なわとび");
   await page.getByRole("button", { name: "カテゴリを追加", exact: true }).click();
+  await page.getByLabel("新しいカテゴリ").fill("なわとび");
+  await page.getByRole("button", { name: "追加する", exact: true }).click();
   await page.getByRole("button", { name: "なわとび", exact: true }).waitFor();
   await page.getByLabel("目標値").fill("30");
   await page.getByRole("button", { name: "ミッションを作る" }).click();

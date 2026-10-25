@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { type TargetUnit, type VerifyMethod } from "@/lib/constants";
 import { todayJst } from "@/lib/date";
 import { api, ApiError } from "@/lib/api";
@@ -38,6 +38,12 @@ export function MissionForm({ mode, initial, childOptions, editable, error, fiel
   const [categoryName, setCategoryName] = useState("");
   const [categoryError, setCategoryError] = useState<string | null>(null);
   const [addingCategory, setAddingCategory] = useState(false);
+  const [categoryEditorOpen, setCategoryEditorOpen] = useState(false);
+  const categoryEditorId = useId();
+  const categoryInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (categoryEditorOpen) categoryInput.current?.focus();
+  }, [categoryEditorOpen]);
   const set = <K extends keyof MissionFormValues>(k: K, value: MissionFormValues[K]) => setV(s => ({ ...s, [k]: value }));
   const isEdit = mode === "edit";
   const locked = isEdit && editable && !editable.allowed;
@@ -52,6 +58,7 @@ export function MissionForm({ mode, initial, childOptions, editable, error, fiel
       setCategories(previous => ({ items: [...(previous?.items ?? []).filter(item => item.code !== category.code), category] }));
       set("categoryCode", category.code);
       setCategoryName("");
+      setCategoryEditorOpen(false);
     } catch (cause) {
       setCategoryError(cause instanceof ApiError ? cause.message : "カテゴリを追加できませんでした");
     } finally { setAddingCategory(false); }
@@ -66,17 +73,25 @@ export function MissionForm({ mode, initial, childOptions, editable, error, fiel
           {(id, d) => <input id={id} aria-describedby={d} className={inputClass("parent", !!fieldErrors.title)} value={v.title} onChange={event => set("title", event.target.value)} maxLength={30} placeholder="なわとび" required />}
         </Field>
         {!isEdit && <section className="space-y-3" aria-label="カテゴリ">
-          <p className="text-sm font-bold">カテゴリ（必須）</p>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-left text-sm font-bold">カテゴリ（必須）</p>
+            <Button variant="secondary" className="shrink-0 min-h-8! px-2! text-sm! rounded-lg!" aria-expanded={categoryEditorOpen} aria-controls={categoryEditorId} disabled={addingCategory || categoriesLoading || !!categoryLoadError} onClick={() => { setCategoryError(null); setCategoryEditorOpen(open => !open); }}>カテゴリを追加</Button>
+          </div>
           {categoriesLoading && <p className="text-sm text-muted">カテゴリを読み込み中…</p>}
           {categoryLoadError && <><ErrorBanner message={categoryLoadError.message} /><Button variant="secondary" onClick={() => void reload()}>再読み込み</Button></>}
           {categories && categories.items.length === 0 && <p className="text-sm text-muted">カテゴリを追加してください。</p>}
           <div className="flex flex-wrap gap-2">
             {categories?.items.map(category => <button key={category.code} type="button" aria-pressed={v.categoryCode === category.code} onClick={() => set("categoryCode", category.code)} className={`min-h-12 rounded-xl border px-4 text-sm font-bold ${v.categoryCode === category.code ? "border-parent-primary bg-parent-soft text-parent-primary-dark" : "border-line bg-white"}`}>{category.label}</button>)}
           </div>
-          <Field label="新しいカテゴリ" hint="20文字まで（例：運動、お手伝い）" error={categoryError ?? undefined}>
-            {(id, d) => <input id={id} aria-describedby={d} className={inputClass()} value={categoryName} onChange={event => setCategoryName(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); if (!addingCategory && !categoriesLoading && !categoryLoadError) void addCategory(); } }} maxLength={20} placeholder="カテゴリ名を入力" disabled={addingCategory} />}
-          </Field>
-          <Button variant="secondary" disabled={addingCategory || categoriesLoading || !!categoryLoadError} onClick={() => void addCategory()}>{addingCategory ? "追加中…" : "カテゴリを追加"}</Button>
+          {categoryEditorOpen && <div id={categoryEditorId} className="space-y-3">
+            <Field label="新しいカテゴリ" hint="20文字まで（例：運動、お手伝い）" error={categoryError ?? undefined}>
+              {(id, d) => <input ref={categoryInput} id={id} aria-describedby={d} className={inputClass()} value={categoryName} onChange={event => setCategoryName(event.target.value)} onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) { event.preventDefault(); if (!addingCategory && !categoriesLoading && !categoryLoadError) void addCategory(); } }} maxLength={20} placeholder="カテゴリ名を入力" disabled={addingCategory} />}
+            </Field>
+            <div className="flex gap-2">
+              <Button variant="secondary" disabled={addingCategory} onClick={() => void addCategory()}>{addingCategory ? "追加中…" : "追加する"}</Button>
+              <Button variant="ghost" disabled={addingCategory} onClick={() => { setCategoryEditorOpen(false); setCategoryName(""); setCategoryError(null); }}>キャンセル</Button>
+            </div>
+          </div>}
           {fieldErrors.categoryCode && <p role="alert" className="text-sm font-bold text-danger">{fieldErrors.categoryCode}</p>}
         </section>}
         {!isEdit && <Field label="目標値" hint="任意・1〜9999（回数）" error={fieldErrors.targetValue}>
