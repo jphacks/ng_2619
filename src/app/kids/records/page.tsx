@@ -8,7 +8,7 @@ import { EmptyState, ErrorBanner, Loading } from "@/components/ui";
 
 export default function RecordsPage() {
   const { data, error, loading } = useApi<KidsRecords>("/kids/records");
-  if (loading) return <Loading label="よみこみちゅう…" />;
+  if (loading) return <Loading label="よみこみちゅう…" className="text-4xl font-bold" />;
   if (error || !data) return <ErrorBanner message={error?.message} />;
   return (
     <div className="space-y-5">

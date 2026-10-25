@@ -15,7 +15,7 @@ import { CATEGORY_EMOJI } from "@/components/StatusBadge";
 import { LevelUpModal } from "@/components/kids/LevelUpModal";
 
 const NOTICE_TEXT: Record<KidsNotice["kind"], (title: string) => string> = {
-  APPROVED: (t) => `「${t}」 たっせい！ おうちのひとが みとめてくれたよ`,
+  APPROVED: (t) => `「${t}」 たっせい！ おうちのひとが ほめてくれたよ`,
   PARENT_COMPLETED: (t) => `おうちのひとが 「${t}」を たっせいに したよ！`,
   REJECTED: (t) => `「${t}」 もういちど ちょうせんしよう`,
 };

@@ -21,9 +21,9 @@
   --color-parent-primary-dark: #1e40af;
   --color-parent-soft: #dbeafe;
 
-  --color-kid-bg: #fffbeb;
-  --color-kid-ink: #1c1917;
-  --color-kid-primary: #15803d;
+  --color-kid-bg: #ff007f;
+  --color-kid-ink: #000000;
+  --color-kid-primary: #00A497;
   --color-kid-primary-dark: #166534;
   --color-kid-accent: #c2410c;
   --color-kid-soft: #dcfce7;
@@ -35,7 +35,7 @@ html {
 }
 
 body {
-  background: var(--color-parent-bg);
+  background: var(--color-kid-bg);
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
