@@ -16,15 +16,19 @@ export default function ChildDetailPage() {
   const { childId } = useParams<{ childId: string }>();
   const { data, error, loading, reload } = useApi<ChildSummary>(`/children/${childId}/summary`);
   const [target, setTarget] = useState<CompleteTarget | null>(null);
+  const [order, setOrder] = useState<"desc" | "asc">("desc");
 
+  // 達成の記録を達成日時（承認・直接登録した日時）の順に並べ、月ごとにまとめる
   const byMonth = useMemo(() => {
+    const sign = order === "desc" ? -1 : 1;
+    const sorted = [...(data?.history ?? [])].sort((a, b) => sign * a.approvedAt.localeCompare(b.approvedAt));
     const groups = new Map<string, ChildSummary["history"]>();
-    for (const h of data?.history ?? []) {
+    for (const h of sorted) {
       const key = yearMonthJst(h.approvedAt);
       groups.set(key, [...(groups.get(key) ?? []), h]);
     }
     return [...groups];
-  }, [data]);
+  }, [data, order]);
 
   if (loading && !data) return <Loading />;
   if (error || !data) return <ErrorBanner message={error?.message ?? "見つかりません"} />;
@@ -81,7 +85,29 @@ export default function ChildDetailPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold">達成の記録</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold">達成の記録</h2>
+          {byMonth.length > 0 && (
+            <div role="group" aria-label="並び順" className="flex gap-1">
+              {(
+                [
+                  ["desc", "新しい順"],
+                  ["asc", "古い順"],
+                ] as const
+              ).map(([value, label]) => (
+                <Button
+                  key={value}
+                  variant={order === value ? "primary" : "secondary"}
+                  aria-pressed={order === value}
+                  onClick={() => setOrder(value)}
+                  className="min-h-10 text-sm"
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
         {byMonth.length === 0 ? (
           <EmptyState>まだ達成したミッションはありません</EmptyState>
         ) : (

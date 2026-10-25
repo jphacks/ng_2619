@@ -113,7 +113,7 @@ export default function MissionsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold">
-                      <span aria-hidden>{CATEGORY_EMOJI[m.categoryCode]} </span>
+                      <span aria-hidden>{CATEGORY_EMOJI[m.categoryCode] ?? "⭐"} </span>
                       {m.title}
                     </p>
                     <p className="text-sm text-muted">
@@ -132,6 +132,9 @@ export default function MissionsPage() {
                       <span className="flex items-center gap-2">
                         <span className="font-bold">{c.childName}</span>
                         <StatusBadge status={c.status} />
+                        {c.status === "APPROVED" && c.approvedAt && (
+                          <span className="text-sm text-muted">{formatMonthDay(new Date(c.approvedAt))}</span>
+                        )}
                       </span>
                       <span className="flex gap-2">
                         {c.pendingSubmissionId && (
