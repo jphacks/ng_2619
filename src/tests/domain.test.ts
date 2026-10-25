@@ -72,10 +72,11 @@ describe("期限と状態", () => {
 });
 
 describe("入力チェック", () => {
-  it("目標値と単位は両方入力するか両方空", () => {
+  it("目標値だけの入力は回数として扱い、目標なしも許可する", () => {
     const base = { title: "a", categoryCode: "BALL", verifyMethod: "VIDEO", childIds: ["0192f3c4-0000-7000-8000-000000000000"] };
     expect(missionCreateSchema.safeParse({ ...base, targetValue: 50, targetUnit: "TIMES" }).success).toBe(true);
-    expect(missionCreateSchema.safeParse({ ...base, targetValue: 50 }).success).toBe(false);
+    expect(missionCreateSchema.parse({ ...base, targetValue: 50 }).targetUnit).toBe("TIMES");
+    expect(missionCreateSchema.safeParse({ ...base, targetUnit: "TIMES" }).success).toBe(false);
     expect(missionCreateSchema.safeParse(base).success).toBe(true);
   });
   it("パスワードの強度", () => {

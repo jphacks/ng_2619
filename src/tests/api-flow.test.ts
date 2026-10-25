@@ -10,6 +10,7 @@ import * as me from "@/app/api/v1/me/route";
 import * as children from "@/app/api/v1/children/route";
 import * as childSummary from "@/app/api/v1/children/[id]/summary/route";
 import * as missions from "@/app/api/v1/missions/route";
+import * as categories from "@/app/api/v1/categories/route";
 import * as mission from "@/app/api/v1/missions/[id]/route";
 import * as complete from "@/app/api/v1/challenges/[id]/complete/route";
 import * as archive from "@/app/api/v1/challenges/[id]/archive/route";
@@ -59,10 +60,14 @@ async function newChild(parent: TestClient) {
 }
 
 async function newMission(parent: TestClient, childIds: string[], verifyMethod = "EITHER", dueDate: string | null = null) {
+  const category = await parent.call(categories.POST, "POST", "/api/v1/categories", { body: { label: "運動" } });
+  expect(category.status).toBe(201);
   const r = await parent.call(missions.POST, "POST", "/api/v1/missions", {
-    body: { title: "さかあがり", categoryCode: "BAR", verifyMethod, childIds, dueDate },
+    body: { title: "さかあがり", categoryCode: category.body.code, verifyMethod, childIds, dueDate },
   });
   expect(r.status).toBe(201);
+  // 過去の確認方法を持つミッションの互換テスト用。新規APIは常にEITHERで作る。
+  if (verifyMethod !== "EITHER") await prisma.mission.update({ where: { id: r.body.missionId }, data: { verifyMethod } });
   return r.body as { missionId: string; challengeIds: string[] };
 }
 
@@ -237,7 +242,8 @@ describe("認可：他の家族のデータは404（NF-S-04）", () => {
     expect((await parentB.call(complete.POST, "POST", "/", { params: { id: m.challengeIds[0] }, body: {} })).status).toBe(404);
     expect((await parentB.call(archive.POST, "POST", "/", { params: { id: m.challengeIds[0] } })).status).toBe(404);
     expect((await parentB.call(childSummary.GET, "GET", "/", { params: { id: childId } })).status).toBe(404);
-    expect((await parentB.call(missions.POST, "POST", "/", { body: { title: "x", categoryCode: "BAR", verifyMethod: "VISUAL", childIds: [childId] } })).status).toBe(404);
+    const categoryB = await parentB.call(categories.POST, "POST", "/api/v1/categories", { body: { label: "運動" } });
+    expect((await parentB.call(missions.POST, "POST", "/", { body: { title: "x", categoryCode: categoryB.body.code, verifyMethod: "VISUAL", childIds: [childId] } })).status).toBe(404);
     expect((await parentB.call(submissions.GET, "GET", "/api/v1/submissions")).body.items).toHaveLength(0);
 
     // 他の子どものチャレンジ

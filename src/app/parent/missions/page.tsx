@@ -113,7 +113,7 @@ export default function MissionsPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold">
-                      <span aria-hidden>{CATEGORY_EMOJI[m.categoryCode]} </span>
+                      <span aria-hidden>{CATEGORY_EMOJI[m.categoryCode] ?? "⭐"} </span>
                       {m.title}
                     </p>
                     <p className="text-sm text-muted">

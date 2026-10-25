@@ -34,14 +34,14 @@ it("保存済みの原文を保ち、一覧・詳細・通知・記録・学年�
     expect((await home(session)).notices[0]).toMatchObject({ missionTitle: "なわとび 100かい", comment: "れんしゅうできたね" });
     expect(await prisma.mission.findUnique({ where: { id: missionId } })).toMatchObject({ title, description });
 
-    const request = (token?: string) => new Request("http://localhost:3000/api/v1/text-preview", {
-      method: "POST", headers: { "content-type": "application/json", ...(token ? { cookie: `sid=${token}` } : {}) },
+    const request = (token?: string, cookieName = "sid_parent") => new Request("http://localhost:3000/api/v1/text-preview", {
+      method: "POST", headers: { "content-type": "application/json", ...(token ? { cookie: `${cookieName}=${token}` } : {}) },
       body: JSON.stringify({ title, description, grade: 6 }),
     });
     const args = { params: Promise.resolve({}) };
     expect((await preview(request(), args)).status).toBe(401);
     const childSession = await createSession(prisma, childId, "CHILD", null);
-    expect((await preview(request(childSession.token), args)).status).toBe(403);
+    expect((await preview(request(childSession.token, "sid_child"), args)).status).toBe(401);
     const parentSession = await createSession(prisma, parentId, "PARENT", null);
     const result = await preview(request(parentSession.token), args);
     expect(result.status).toBe(200);

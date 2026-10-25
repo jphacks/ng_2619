@@ -3,9 +3,9 @@ import { createHash } from "node:crypto";
 import type { Masters } from "@/lib/types";
 import { prisma } from "../db";
 
-export async function getMasters(): Promise<{ body: Masters; etag: string }> {
+export async function getMasters(familyId: string): Promise<{ body: Masters; etag: string }> {
   const [categories, stamps, commentTemplates, levels] = await Promise.all([
-    prisma.missionCategory.findMany({ orderBy: { sortOrder: "asc" } }),
+    prisma.missionCategory.findMany({ where: { familyId }, orderBy: { label: "asc" } }),
     prisma.stamp.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.commentTemplate.findMany({ orderBy: { sortOrder: "asc" } }),
     prisma.levelMaster.findMany({ orderBy: { level: "asc" } }),

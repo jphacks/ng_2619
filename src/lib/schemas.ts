@@ -103,7 +103,7 @@ const missionFields = {
     .max(200, "説明は200文字以内にしてください")
     .nullish()
     .transform((v) => (v ? v : null)),
-  verifyMethod: z.enum(VERIFY_METHODS),
+  verifyMethod: z.enum(VERIFY_METHODS).default("EITHER"),
   dueDate: ymd.nullish().transform((v) => v ?? null),
 };
 
@@ -115,6 +115,7 @@ export const missionCreateSchema = z
     targetUnit: z.enum(TARGET_UNITS).nullish().transform((v) => v ?? null),
     childIds: z.array(uuid).min(1, "割り当てる子どもを1人以上選んでください").max(5),
   })
+  .transform(v => ({ ...v, targetUnit: v.targetValue !== null ? v.targetUnit ?? ("TIMES" as const) : v.targetUnit }))
   .refine((v) => (v.targetValue === null) === (v.targetUnit === null), {
     message: "目標値と単位は両方入力するか、両方空にしてください",
     path: ["targetUnit"],
