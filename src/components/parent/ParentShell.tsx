@@ -20,7 +20,7 @@ export function ParentShell({ children }: { children: React.ReactNode }) {
         <header className="sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur">
           <div className="mx-auto flex h-14 max-w-[640px] items-center px-4">
             <Link href="/parent" className="font-bold text-parent-primary">
-              そとあそびミッション <span className="text-xs text-muted">保護者</span>
+              ちるちゃれ <span className="text-xs text-muted">保護者</span>
             </Link>
           </div>
         </header>

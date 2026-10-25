@@ -24,7 +24,7 @@ export function KidsShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-kid-bg pb-28 text-lg text-kid-ink">
       <header className="mx-auto flex max-w-[640px] items-center justify-between px-4 pt-4">
-        <span className="text-xl font-bold text-kid-primary">そとあそびミッション</span>
+        <span className="text-xl font-bold text-kid-primary">ちるちゃれ</span>
         <button type="button" onClick={logout} className="min-h-12 rounded-xl px-3 text-base font-bold text-muted hover:bg-black/5">
           おわる
         </button>
