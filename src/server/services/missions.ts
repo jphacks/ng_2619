@@ -93,7 +93,7 @@ export async function createMission(session: SessionContext, input: MissionCreat
   if (input.dueDate && input.dueDate < todayJst()) {
     throw errors.validation("期限日は今日以降にしてください", { dueDate: "期限日は今日以降にしてください" });
   }
-  const category = await prisma.missionCategory.findUnique({ where: { code: input.categoryCode } });
+  const category = await prisma.missionCategory.findFirst({ where: { code: input.categoryCode, familyId: session.familyId } });
   if (!category) throw errors.validation("カテゴリを選んでください", { categoryCode: "カテゴリを選んでください" });
 
   const childIds = [...new Set(input.childIds)];
@@ -116,7 +116,7 @@ export async function createMission(session: SessionContext, input: MissionCreat
         categoryCode: input.categoryCode,
         targetValue: input.targetValue,
         targetUnit: input.targetUnit,
-        verifyMethod: input.verifyMethod,
+        verifyMethod: "EITHER",
         dueDate: input.dueDate ? fromYmd(input.dueDate) : null,
       },
     });
