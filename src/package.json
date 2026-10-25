@@ -2,7 +2,7 @@
   "name": "kids-outdoor-app",
   "version": "0.1.0",
   "private": true,
-  "description": "子どもを外で遊ばせるアプリ（仮称）",
+  "description": "ちるちゃれ",
   "engines": {
     "node": ">=22"
   },

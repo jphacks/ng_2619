@@ -11,7 +11,7 @@ export default function LoginPage() {
           {notice}
         </div>
       )}
-      <h1 className="text-center text-3xl font-bold text-kid-primary">そとあそびミッション</h1>
+      <h1 className="text-center text-3xl font-bold text-kid-primary">ちるちゃれ</h1>
       <p className="mt-2 text-center text-muted">ログインしてね</p>
       <Suspense>
         <LoginForm />
