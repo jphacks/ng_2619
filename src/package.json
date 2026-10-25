@@ -17,6 +17,7 @@
     "db:local": "node scripts/dev-db.mjs",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed-progress": "tsx scripts/seed-progress.ts",
     "db:setup": "prisma migrate deploy && tsx prisma/seed.ts",
     "db:reset-demo": "tsx scripts/reset-demo.ts",
     "avatars:generate": "tsx scripts/generate-avatar-placeholders.ts",
