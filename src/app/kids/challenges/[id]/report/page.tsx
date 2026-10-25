@@ -10,6 +10,7 @@ import { useApi } from "@/lib/hooks";
 import type { KidsChallengeDetail, Masters, SubmissionCreated, VideoUploadUrlResponse } from "@/lib/types";
 import { Button, ErrorBanner, Loading } from "@/components/ui";
 import { assetUrl } from "@/components/Avatar";
+import ParentMessage from "@/components/kids/ParentMessage";
 
 type Phase = "choose" | "checking" | "ready" | "uploading" | "sending" | "retry";
 
@@ -196,7 +197,7 @@ export default function ReportPage() {
                 setPhase("ready");
               }}
             >
-              👀 おうちのひとに みてもらった
+              👀 おうちのひとに みてもらいたい！
             </Button>
           )}
           {/* capture 属性は一部の Android で無視されるため、選ぶボタンも用意している（RK-04） */}
@@ -209,11 +210,10 @@ export default function ReportPage() {
       {phase !== "choose" && phase !== "checking" && (
         <div className="space-y-5">
           {method === "VIDEO" && previewUrl && <video src={previewUrl} controls playsInline className="w-full rounded-3xl bg-black" />}
-          {method === "VISUAL" && <p className="rounded-3xl bg-kid-soft p-4 text-xl font-bold">👀 おうちのひとに みてもらった</p>}
-
+          <ParentMessage />
           {masters && masters.stamps.length > 0 && (
             <div>
-              <p className="mb-2 text-lg font-bold">ひとこと（えらばなくても いいよ）</p>
+              <p className="mb-2 text-lg font-bold">スタンプ（えらばなくても いいよ）</p>
               <div className="grid grid-cols-2 gap-2">
                 {masters.stamps.map((s) => (
                   <button
