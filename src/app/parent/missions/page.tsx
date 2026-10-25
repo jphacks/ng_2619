@@ -132,6 +132,9 @@ export default function MissionsPage() {
                       <span className="flex items-center gap-2">
                         <span className="font-bold">{c.childName}</span>
                         <StatusBadge status={c.status} />
+                        {c.status === "APPROVED" && c.approvedAt && (
+                          <span className="text-sm text-muted">{formatMonthDay(new Date(c.approvedAt))}</span>
+                        )}
                       </span>
                       <span className="flex gap-2">
                         {c.pendingSubmissionId && (
