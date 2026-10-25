@@ -1,5 +1,5 @@
 # ちるちゃれ
-
+![Uploading Gemini_Generated_Image_7unr1o7unr1o7unr.jpg…]()
 保護者が子どもに対して運動に関するミッションを設定し、子どもが挑戦・報告できるWebアプリです。子どものミッション達成記録も確認可能です。
 
 ## 製品概要
@@ -99,13 +99,3 @@ npm start
 起動時にポートの使用エラーが出る場合は、同じアプリや手動起動したDBを終了してください。簡単起動ではポート3000・54329と標準のDB接続設定を使います。詳細な手動起動・Docker・本番ビルドの手順は [src/README.md](src/README.md) を参照してください。
 
 ---
-
-以下は製品紹介用のテンプレートです。
-
-[![IMAGE ALT TEXT HERE](https://jphacks.com/wp-content/uploads/2026/07/IMG_5316.png)](https://www.youtube.com/watch?v=piaNsc6ilBI)
-
-
-### 独自技術
-#### ハッカソンで開発した独自機能・技術
-* 独自で開発したものの内容をこちらに記載してください
-* 特に力を入れた部分をファイルリンク、またはcommit_idを記載してください。
