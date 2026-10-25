@@ -147,7 +147,7 @@ try {
   await shot("kids-challenge");
   await page.getByRole("link", { name: "できた！" }).click();
   await page.getByRole("button", { name: /みてもらった/ }).click();
-  await page.getByRole("button", { name: /がんばった/ }).click();
+  await page.getByLabel("コメント", { exact: true }).fill("さいごまで がんばったよ！");
   await shot("kids-report");
   await page.getByRole("button", { name: "おくる" }).click();
   await page.waitForURL("**/done");

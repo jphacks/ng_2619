@@ -190,7 +190,7 @@ export async function createVideoUpload(
 export async function submit(
   session: SessionContext,
   challengeId: string,
-  input: { method: SubmissionMethod; videoId?: string; stampCode: string | null },
+  input: { method: SubmissionMethod; videoId?: string; stampCode: string | null; childComment?: string | null },
 ): Promise<SubmissionCreated> {
   const c = await findOwnChallenge(prisma, session.userId, challengeId, { mission: true });
   assertSubmittable(c.status, c.mission.dueDate, c.mission.verifyMethod, input.method);
@@ -229,6 +229,7 @@ export async function submit(
           source: "CHILD",
           method: input.method,
           stampCode: input.stampCode,
+          childComment: input.childComment ?? null,
           submittedAt: new Date(),
         },
       });

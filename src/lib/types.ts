@@ -100,6 +100,7 @@ export type SubmissionDetail = {
   method: SubmissionMethod;
   submittedAt: string;
   stampLabel: string | null;
+  childComment: string | null;
   reviewResult: "APPROVED" | "REJECTED" | null;
   reviewComment: string | null;
   child: { id: string; displayName: string };

@@ -156,6 +156,7 @@ export const submissionCreateSchema = z
     method: z.enum(SUBMISSION_METHODS),
     videoId: uuid.optional(),
     stampCode: z.string().max(40).nullish().transform((v) => v ?? null),
+    childComment: z.string().trim().max(200, "コメントは200文字以内にしてください").nullish().transform(v => v || null),
   })
   .refine((v) => v.method !== "VIDEO" || !!v.videoId, { message: "動画がありません", path: ["videoId"] });
 

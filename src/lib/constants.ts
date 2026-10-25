@@ -24,7 +24,7 @@ export const MAX_LEVEL = 50;
 
 export const VIDEO_MAX_BYTES = 104_857_600;
 export const VIDEO_MAX_SECONDS = 60;
-export const VIDEO_CONTENT_TYPES = ["video/mp4", "video/quicktime"] as const;
+export const VIDEO_CONTENT_TYPES = ["video/mp4", "video/quicktime", "video/webm"] as const;
 export type VideoContentType = (typeof VIDEO_CONTENT_TYPES)[number];
 
 export const TERMS_VERSION = "2026-10-24";

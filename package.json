@@ -4,6 +4,7 @@
   "engines": { "node": ">=22", "npm": ">=9" },
   "scripts": {
     "setup": "node src/scripts/check-runtime.mjs && npm --prefix src ci && node src/scripts/local.mjs --setup",
-    "start": "node src/scripts/local.mjs"
+    "start": "node src/scripts/local.mjs",
+    "reset:demo": "npm --prefix src run db:reset-demo --"
   }
 }
