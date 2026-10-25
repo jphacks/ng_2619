@@ -31,6 +31,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   // Docker イメージ用（Dockerfile で NEXT_OUTPUT=standalone を設定）。ローカルの npm start では使わない
   output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
+  // アプリのルートは src/。上のフォルダ（リポジトリのルートやユーザフォルダ）にも package-lock.json があると
+  // Next.js がそちらをルートと推測して警告を出すため、明示する
+  outputFileTracingRoot: __dirname,
   serverExternalPackages: ["@node-rs/argon2", "@google-cloud/storage", "kuromoji"],
   outputFileTracingIncludes: { "/*": ["./node_modules/kuromoji/dict/**/*"] },
   async headers() {

@@ -21,6 +21,7 @@ model Family {
   missions   Mission[]
   challenges Challenge[]
   videos     Video[]
+  categories MissionCategory[]
 
   @@map("families")
 }
@@ -140,8 +141,12 @@ model MissionCategory {
   label     String
   iconPath  String @map("icon_path")
   sortOrder Int    @map("sort_order") @db.SmallInt
+  familyId  String? @map("family_id") @db.Uuid
+  family    Family? @relation(fields: [familyId], references: [id], onDelete: Cascade)
 
   missions Mission[]
+
+  @@unique([familyId, label])
 
   @@map("mission_categories")
 }
